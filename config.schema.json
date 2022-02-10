@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "format": "uri",
+      "default": "http://localhost:8080"
+    },
+    "account": {
+      "type": "integer",
+      "minimum": 10000,
+      "default": 1234567890
+    },
+    "verify_key": {
+      "type": "string",
+      "default": "ServiceVerifyKey"
+    },
+    "log": {
+      "type": "boolean",
+      "default": false
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "host",
+    "account",
+    "verify_key"
+  ]
+}

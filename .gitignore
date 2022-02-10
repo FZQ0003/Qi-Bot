@@ -1,0 +1,5 @@
+__pycache__/
+.idea/
+graia-ariadne/
+config.json
+test*
