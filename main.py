@@ -1,6 +1,10 @@
 import asyncio
 import json
+import pkgutil
+import sys
+
 from pathlib import Path
+from loguru import logger
 
 from graia.broadcast import Broadcast
 from graia.ariadne.app import Ariadne
@@ -12,11 +16,15 @@ from graia.saya.builtins.broadcast import BroadcastBehaviour
 def main():
     """Main function"""
 
-    config_file = 'config.json'
+    # Read args
+    if len(sys.argv) > 1:
+        config_file = sys.argv[1]
+    else:
+        config_file = 'config/bot.json'
+
+    # Read config
     if not Path(config_file).is_file():
         raise FileNotFoundError(f'{config_file} not found.')
-
-    # Read config.json
     with open(config_file) as f:
         config = json.load(f)  # type: dict
 
@@ -26,7 +34,7 @@ def main():
         broadcast=bcc,
         connect_info=MiraiSession(
             host=config['host'],
-            verify_key=config['verify_key'],
+            verify_key=config.get('verify_key', None),
             account=config['account']
         )
     )
@@ -36,9 +44,16 @@ def main():
     saya = Saya(bcc)
     saya.install_behaviours(BroadcastBehaviour(bcc))
     with saya.module_context():
-        for module in config.get('modules', []):
-            saya.require(module)
-        pass
+        modules = config.get('modules', [])
+        if modules:
+            for module in modules:
+                saya.require(module)
+        else:
+            logger.warning('No module loaded. Use auto mode...')
+            for module_info in pkgutil.iter_modules(["module"]):
+                module_name = module_info.name
+                if not module_name.startswith("_"):
+                    saya.require("modules." + module_name)
 
     # Launch
     app.launch_blocking()
