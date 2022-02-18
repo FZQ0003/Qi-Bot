@@ -41,6 +41,7 @@ def main():
     app.adapter.log = config.get('log', False)
 
     # Load modules
+    # noinspection SpellCheckingInspection
     saya = Saya(bcc)
     saya.install_behaviours(BroadcastBehaviour(bcc))
     with saya.module_context():

@@ -1,7 +1,7 @@
 from asyncio import sleep
 from random import uniform
-from graia.ariadne.message.chain import MessageChain
 
+from graia.ariadne.message.chain import MessageChain
 
 # Plain, Source, Quote, At, AtAll, Face
 # Poke, Dice, MusicShare, Forward, File
