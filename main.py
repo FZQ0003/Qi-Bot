@@ -51,7 +51,7 @@ def main():
                 saya.require(module)
         else:
             logger.warning('No module loaded. Use auto mode...')
-            for module_info in pkgutil.iter_modules(["module"]):
+            for module_info in pkgutil.iter_modules(["modules"]):
                 module_name = module_info.name
                 if not module_name.startswith("_"):
                     saya.require("modules." + module_name)

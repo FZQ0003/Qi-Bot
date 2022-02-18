@@ -7,6 +7,11 @@ import pysilk
 CACHE_ENABLE = True
 
 
+# TODO: DataCheckError
+class DataCheckError(ValueError):
+    pass
+
+
 # TODO: Use pydantic.
 class CommonFile(object):
     filename: str
@@ -109,6 +114,10 @@ class Cache(CommonFile):
     def path_str(self) -> str:
         return 'cache/' + super().path_str
 
+    @staticmethod
+    def data_check(data: bytes) -> None:
+        pass
+
     def __call__(self, func: Callable):
         # TODO: Now all the functions like func(text, cache) use this.
         #       Maybe it can be prettified?
@@ -118,6 +127,7 @@ class Cache(CommonFile):
             if self.exists and self.enable:
                 return self.read()
             output = func(*args, **kwargs)
+            self.data_check(output)
             if self.enable:
                 self.write(output)
             return output
@@ -164,3 +174,8 @@ class AudioCache(SilkFile, Cache):
         super(SilkFile, self).__init__(filename)
         if enable is not None:
             self.enable = enable
+
+    @staticmethod
+    def data_check(data: bytes) -> None:
+        if len(data) < 512:
+            raise DataCheckError('Audio too short!')
