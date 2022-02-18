@@ -5,3 +5,4 @@ tests/
 config/*.json
 !config/schema/*.json
 !config/example/*.json
+cache/
