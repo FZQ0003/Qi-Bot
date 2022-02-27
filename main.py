@@ -1,44 +1,41 @@
 import asyncio
-import json
 import pkgutil
-import sys
 
-from pathlib import Path
-from loguru import logger
-
-from graia.broadcast import Broadcast
+from graia.ariadne.adapter import DefaultAdapter
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import MiraiSession
+from graia.broadcast import Broadcast
 from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
+from loguru import logger
+
+from utils.file import JsonConfig
 
 
 def main():
     """Main function"""
 
-    # Read args
-    if len(sys.argv) > 1:
-        config_file = sys.argv[1]
-    else:
-        config_file = 'config/bot.json'
-
     # Read config
-    if not Path(config_file).is_file():
+    config_file = JsonConfig('bot')
+    if not config_file.exists:
         raise FileNotFoundError(f'{config_file} not found.')
-    with open(config_file) as f:
-        config = json.load(f)  # type: dict
+    config = config_file.read()
 
     # Init
     bcc = Broadcast(loop=asyncio.new_event_loop())
     app = Ariadne(
-        broadcast=bcc,
-        connect_info=MiraiSession(
-            host=config['host'],
-            verify_key=config.get('verify_key', None),
-            account=config['account']
-        )
+        connect_info=DefaultAdapter(
+            broadcast=bcc,
+            mirai_session=MiraiSession(
+                host=config['host'],
+                verify_key=config.get('verify_key', None),
+                account=config.get('account', None)
+            ),
+            log=config.get('log', False)
+        ),
+        disable_logo=True,
+        disable_telemetry=True
     )
-    app.adapter.log = config.get('log', False)
 
     # Load modules
     # noinspection SpellCheckingInspection
@@ -54,7 +51,11 @@ def main():
             for module_info in pkgutil.iter_modules(["modules"]):
                 module_name = module_info.name
                 if not module_name.startswith("_"):
-                    saya.require("modules." + module_name)
+                    module_name = "modules." + module_name
+                    try:
+                        saya.require(module_name)
+                    except ImportError:
+                        logger.error(f'Failed to require {module_name}.')
 
     # Launch
     app.launch_blocking()

@@ -1,36 +1,29 @@
 from hashlib import md5 as hash_str
 from pathlib import Path
-from typing import Any, Union, Callable
+from typing import Any, Union, Callable, Optional
 
-import pysilk
+from ..model import QiModel
 
 CACHE_ENABLE = True
 
 
-# TODO: DataCheckError
-class DataCheckError(ValueError):
-    pass
-
-
-# TODO: Use pydantic.
-class CommonFile(object):
+class CommonFile(QiModel):
     filename: str
-    category: str = ''
-    suffix: str = ''
-    is_elf: bool = True
+    category: Optional[str] = ''
+    suffix: Optional[str] = ''
+    is_elf: Optional[bool] = True
 
     def __init__(self,
                  filename: str,
                  category: str = None,
                  suffix: str = None,
-                 is_elf: bool = None):
-        self.filename = filename
-        if category is not None:
-            self.category = category
-        if suffix is not None:
-            self.suffix = suffix
-        if is_elf is not None:
-            self.is_elf = is_elf
+                 is_elf: bool = None,
+                 **kwargs):
+        super().__init__(filename=filename,
+                         category=category,
+                         suffix=suffix,
+                         is_elf=is_elf,
+                         **kwargs)
 
     def __str__(self):
         return '<{} object: {} at {}>'.format(
@@ -80,8 +73,9 @@ class CommonFile(object):
 
 
 class Cache(CommonFile):
-    enable: bool = CACHE_ENABLE
-    no_init: bool = False
+    enable: Optional[bool] = CACHE_ENABLE
+    _no_init: bool = False
+    _header: bytes = None
 
     def __init__(self,
                  filename: str,
@@ -89,25 +83,31 @@ class Cache(CommonFile):
                  suffix: str = None,
                  is_elf: bool = None,
                  enable: bool = None):
-        super().__init__(filename, category, suffix, is_elf)
-        if enable is not None:
-            self.enable = enable
+        super().__init__(filename, category, suffix, is_elf, enable=enable)
 
     @staticmethod
-    def encode(content: Union[str, bytes]) -> str:
+    def encode(content: Union[str, bytes],
+               header: Union[str, bytes] = None) -> str:
         if isinstance(content, str):
             content = content.encode('utf-8')
+        if header is not None:
+            if isinstance(header, str):
+                header = header.encode('utf-8')
+            content = header + content
         return hash_str(content).hexdigest()
 
     @classmethod
-    def create(cls, content: Union[str, bytes], enable: bool = None):
-        return cls(cls.encode(content), enable=enable)
+    def create(cls,
+               content: Union[str, bytes],
+               header: Union[str, bytes] = None,
+               enable: bool = None):
+        return cls(cls.encode(content, header), enable=enable)
 
-    # TODO: Why develop such a function?
     @classmethod
-    def late_init(cls):
+    def late_init(cls, header: Union[str, bytes] = None):
         output = cls('.no-init')
-        output.no_init = True
+        output._no_init = True
+        output._header = header
         return output
 
     @property
@@ -119,11 +119,17 @@ class Cache(CommonFile):
         pass
 
     def __call__(self, func: Callable):
-        # TODO: Now all the functions like func(text, cache) use this.
-        #       Maybe it can be prettified?
         def wrapper(*args, **kwargs):
-            if self.no_init:
-                self.filename = self.encode(args[0])
+            if self._no_init:
+                # Read the first arg for generating filename
+                # Read cache flag (or the last arg) to enable cache
+                self.filename = self.encode(args[0], self._header)
+                if isinstance(kwargs.get('cache', None), bool):
+                    self.enable = kwargs['cache']
+                elif isinstance(args[-1], bool):
+                    self.enable = args[-1]
+                else:
+                    self.enable = CACHE_ENABLE
             if self.exists and self.enable:
                 return self.read()
             output = func(*args, **kwargs)
@@ -135,47 +141,29 @@ class Cache(CommonFile):
         return wrapper
 
 
-class AudioFile(CommonFile):
-    category: str = 'audio'
-    suffix: str = 'wav'
-    is_elf: bool = True
+class Config(CommonFile):
+    is_elf: bool = False
 
-    def __init__(self, filename: str):
-        super().__init__(filename)
+    def __init__(self,
+                 filename: str,
+                 category: str = None,
+                 suffix: str = None):
+        super().__init__(filename, category, suffix)
 
-    # TODO: Read & write wave files.
-
-
-class SilkFile(AudioFile):
-    suffix: str = 'slk'
-
-    def to_wav(self) -> AudioFile:
-        return AudioFile(self.filename)
+    @property
+    def path_str(self) -> str:
+        return 'config/' + super().path_str
 
     @staticmethod
-    def silk_encode(wav_data: bytes) -> bytes:
-        return pysilk.encode(wav_data)
+    def _read_data(text: str) -> dict:
+        raise NotImplementedError
 
-    def read_from_wav_file(self, wav_path: Union[str, Path] = None) -> bytes:
-        if wav_path is None:
-            wav_path = self.to_wav().path_str
-        elif isinstance(wav_path, Path):
-            wav_path = str(wav_path)
-        return pysilk.encode_file(wav_path)
-
-    def write_to_wav(self, data: bytes):
-        return self.to_wav().write(pysilk.decode(data, to_wav=True))
-
-
-# Use silk to save cache
-class AudioCache(SilkFile, Cache):
-
-    def __init__(self, filename: str, enable: bool = None):
-        super(SilkFile, self).__init__(filename)
-        if enable is not None:
-            self.enable = enable
+    def read(self) -> dict:
+        return self._read_data(super().read())
 
     @staticmethod
-    def data_check(data: bytes) -> None:
-        if len(data) < 512:
-            raise DataCheckError('Audio too short!')
+    def _write_data(data: dict) -> str:
+        raise NotImplementedError
+
+    def write(self, data: dict) -> int:
+        return super().write(self._write_data(data))
