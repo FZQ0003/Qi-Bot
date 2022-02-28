@@ -11,5 +11,7 @@ except ModuleNotFoundError as e:
 # yaml
 try:
     from .yaml import *
+    DefaultConfig = YamlConfig
 except ModuleNotFoundError as e:
     import_warning(e, 'yaml')
+    DefaultConfig = JsonConfig

@@ -1,8 +1,0 @@
-{
-  "$schema": "schema/bot.schema.json",
-  "host": "http://localhost:8080",
-  "account": 1234567890,
-  "verify_key": "ServiceVerifyKey",
-  "log": false,
-  "modules": []
-}

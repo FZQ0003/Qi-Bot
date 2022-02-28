@@ -1,8 +1,17 @@
-__pycache__/
+# Project files
 .idea/
 graia-ariadne/
-tests/
-config/*.json
-!config/schema/*.json
-!config/example/*.json
+
+# Cache
+__pycache__/
 cache/
+
+# Tests
+tests/
+
+# Config
+config/*.json
+config/*.yml
+!config/example/*.json
+!config/example/*.yml
+!config/schema/*.json

@@ -2,6 +2,9 @@ from hashlib import md5 as hash_str
 from pathlib import Path
 from typing import Any, Union, Callable, Optional
 
+from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
+
 from ..model import QiModel
 
 CACHE_ENABLE = True
@@ -158,12 +161,17 @@ class Config(CommonFile):
     def _read_data(text: str) -> dict:
         raise NotImplementedError
 
-    def read(self) -> dict:
-        return self._read_data(super().read())
+    def read(self, target_model: ModelMetaclass = None) -> Union[dict, BaseModel]:
+        output = self._read_data(super().read())
+        if target_model is None:
+            return output
+        return target_model(**output)
 
     @staticmethod
     def _write_data(data: dict) -> str:
         raise NotImplementedError
 
-    def write(self, data: dict) -> int:
+    def write(self, data: Union[dict, BaseModel]) -> int:
+        if isinstance(data, BaseModel):
+            data = data.dict()
         return super().write(self._write_data(data))

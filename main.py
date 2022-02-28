@@ -9,14 +9,14 @@ from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
 from loguru import logger
 
-from utils.file import JsonConfig
+from utils.file import DefaultConfig
 
 
 def main():
     """Main function"""
 
     # Read config
-    config_file = JsonConfig('bot')
+    config_file = DefaultConfig('bot')
     if not config_file.exists:
         raise FileNotFoundError(f'{config_file} not found.')
     config = config_file.read()
