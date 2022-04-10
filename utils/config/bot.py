@@ -28,7 +28,7 @@ class BotConfigModel(QiModel):
         return v
 
 
-_config_file = DefaultConfig('bot')
-if not _config_file.exists:
-    raise FileNotFoundError(f'{_config_file.path} not found.')
-_config: BotConfigModel = _config_file.read(BotConfigModel)
+config_file = DefaultConfig('bot')
+if not config_file.exists:
+    raise FileNotFoundError(f'{config_file.path} not found.')
+config: BotConfigModel = config_file.read(BotConfigModel)

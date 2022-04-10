@@ -10,10 +10,10 @@ class TTSConfigModel(QiModel):
     access: Optional[dict] = {}
 
 
-_config_file = DefaultConfig('tts')
-_config: TTSConfigModel
-if _config_file.exists:
-    _config = _config_file.read(TTSConfigModel)
+config_file = DefaultConfig('tts')
+config: TTSConfigModel
+if config_file.exists:
+    config = config_file.read(TTSConfigModel)
 else:
-    _config_warning(_config_file.path)
-    _config = TTSConfigModel(engine='espeak')
+    _config_warning(config_file.path)
+    config = TTSConfigModel(engine='espeak')

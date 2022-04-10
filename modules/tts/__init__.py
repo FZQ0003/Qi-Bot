@@ -2,10 +2,10 @@ import asyncio
 
 from arclet.alconna import Alconna, Args, AllParam
 from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import FriendMessage
+from graia.ariadne.event.message import GroupMessage
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain, Voice, Source
-from graia.ariadne.model import Friend
+from graia.ariadne.model import Group
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
 
@@ -31,9 +31,9 @@ def convert_text(text):
     return Voice(data_bytes=engine.convert(text))
 
 
-@channel.use(ListenerSchema(listening_events=[FriendMessage]))
+@channel.use(ListenerSchema(listening_events=[GroupMessage]))
 async def tts_group_listener(app: Ariadne,
-                             friend: Friend,
+                             group: Group,
                              message: MessageChain):
     text = message.include(Plain).merge().asDisplay()
     arpamar = command.analyse_message(text)
@@ -45,8 +45,8 @@ async def tts_group_listener(app: Ariadne,
             audio = await asyncio.get_running_loop().run_in_executor(
                 None, convert_text, text
             )
-            await app.sendMessage(friend, MessageChain([audio]))
+            await app.sendMessage(group, MessageChain([audio]))
         except DataCheckError:
-            await app.sendMessage(friend,
+            await app.sendMessage(group,
                                   MessageChain('???'),
                                   quote=message.getFirst(Source))

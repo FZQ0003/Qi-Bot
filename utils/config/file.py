@@ -8,10 +8,10 @@ class FileConfigModel(QiModel):
     newline: bool = True
 
 
-_config_file = DefaultConfig('file')
-_config: FileConfigModel
-if _config_file.exists:
-    _config = _config_file.read(FileConfigModel)
+config_file = DefaultConfig('file')
+config: FileConfigModel
+if config_file.exists:
+    config = config_file.read(FileConfigModel)
 else:
-    _config_warning(_config_file.path)
-    _config = FileConfigModel()
+    _config_warning(config_file.path)
+    config = FileConfigModel()

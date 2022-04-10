@@ -1,7 +1,3 @@
-from utils.config import tts
-from utils.const import TTS
-from utils.logger import logger
-
 __all__ = [
     'TTSEngine',
     'DefaultTTSEngine',
@@ -9,6 +5,10 @@ __all__ = [
     'PyttsxEngine',
     'AliyunTTSEngine'
 ]
+
+from utils.config import tts
+from utils.const import TTS
+from utils.logger import logger
 
 LANG = TTS.LANGUAGES
 
