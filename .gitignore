@@ -6,6 +6,12 @@ graia-ariadne/
 __pycache__/
 cache/
 
+# Data
+data/
+
+# Temp
+tmp/
+
 # Tests
 tests/
 

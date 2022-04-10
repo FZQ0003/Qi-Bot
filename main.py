@@ -9,17 +9,11 @@ from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
 from loguru import logger
 
-from utils.file import DefaultConfig
+from utils.config import bot as config
 
 
 def main():
     """Main function"""
-
-    # Read config
-    config_file = DefaultConfig('bot')
-    if not config_file.exists:
-        raise FileNotFoundError(f'{config_file} not found.')
-    config = config_file.read()
 
     # Init
     bcc = Broadcast(loop=asyncio.new_event_loop())
@@ -27,11 +21,11 @@ def main():
         connect_info=DefaultAdapter(
             broadcast=bcc,
             mirai_session=MiraiSession(
-                host=config['host'],
-                verify_key=config.get('verify_key', None),
-                account=config.get('account', None)
+                host=config.host,
+                verify_key=config.verify_key,
+                account=config.account
             ),
-            log=config.get('log', False)
+            log=config.log
         ),
         disable_logo=True,
         disable_telemetry=True
@@ -42,9 +36,8 @@ def main():
     saya = Saya(bcc)
     saya.install_behaviours(BroadcastBehaviour(bcc))
     with saya.module_context():
-        modules = config.get('modules', [])
-        if modules:
-            for module in modules:
+        if config.modules:
+            for module in config.modules:
                 saya.require(module)
         else:
             logger.warning('No module loaded. Use auto mode...')

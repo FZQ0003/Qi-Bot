@@ -2,15 +2,15 @@ import asyncio
 
 from arclet.alconna import Alconna, Args, AllParam
 from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import GroupMessage
+from graia.ariadne.event.message import FriendMessage
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain, Voice, Source
-from graia.ariadne.model import Group
+from graia.ariadne.model import Friend
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
 
 from utils.file import DataCheckError
-from utils.tts import EspeakNGEngine
+from utils.tts.engine import AliyunTTSEngine
 
 channel = Channel.current()
 
@@ -23,15 +23,18 @@ command = Alconna(
     command='tts',
     main_args=Args['text':AllParam]
 )
-engine = EspeakNGEngine()
+# engine = EspeakEngine()
+engine = AliyunTTSEngine()
 
 
 def convert_text(text):
     return Voice(data_bytes=engine.convert(text))
 
 
-@channel.use(ListenerSchema(listening_events=[GroupMessage]))
-async def tts_group_listener(app: Ariadne, group: Group, message: MessageChain):
+@channel.use(ListenerSchema(listening_events=[FriendMessage]))
+async def tts_group_listener(app: Ariadne,
+                             friend: Friend,
+                             message: MessageChain):
     text = message.include(Plain).merge().asDisplay()
     arpamar = command.analyse_message(text)
     if arpamar.matched:
@@ -42,11 +45,8 @@ async def tts_group_listener(app: Ariadne, group: Group, message: MessageChain):
             audio = await asyncio.get_running_loop().run_in_executor(
                 None, convert_text, text
             )
-            await app.sendMessage(group, MessageChain([audio]))
-            await app.sendMessage(group,
-                                  MessageChain('语音来喽！如果没收到说明你想让我当复读机——'),
-                                  quote=message.getFirst(Source))
+            await app.sendMessage(friend, MessageChain([audio]))
         except DataCheckError:
-            await app.sendMessage(group,
-                                  MessageChain('这点玩意儿还想让👴说？爪巴！'),
+            await app.sendMessage(friend,
+                                  MessageChain('???'),
                                   quote=message.getFirst(Source))

@@ -1,20 +1,23 @@
 import yaml
 
 from . import Config
+from ..model import QiModel
 
 
-class YamlConfig(Config):
+class YamlMixin(QiModel):
     suffix: str = 'yml'
+    is_elf: bool = False
 
-    def __init__(self,
-                 filename: str,
-                 category: str = None):
+    @staticmethod
+    def reader(source: str) -> dict:
+        return yaml.safe_load(source)
+
+    @staticmethod
+    def writer(config: dict) -> str:
+        return yaml.safe_dump(config, sort_keys=False)
+
+
+class YamlConfig(YamlMixin, Config):
+
+    def __init__(self, filename: str, category: str = None):
         super().__init__(filename, category)
-
-    @staticmethod
-    def _read_data(text: str) -> dict:
-        return yaml.safe_load(text)
-
-    @staticmethod
-    def _write_data(data: dict) -> str:
-        return yaml.safe_dump(data, sort_keys=False)

@@ -1,16 +1,30 @@
-from hashlib import md5 as hash_str
+from functools import wraps
 from pathlib import Path
 from typing import Any, Union, Callable, Optional
 
-from pydantic import BaseModel
-from pydantic.main import ModelMetaclass
+from .error import DataCheckError
+from ..const import FILE
+from ..hash import hash_encode
+from ..model import QiModel, validator
 
-from ..model import QiModel
+CACHE_ENABLE = FILE.CACHE_ENABLE
+NEWLINE = FILE.NEWLINE
 
-CACHE_ENABLE = True
+
+def _get_first_arg(items) -> Union[str, bytes]:
+    output = None
+    for item in items:
+        if isinstance(item, str) or isinstance(item, bytes):
+            output = item
+            break
+    return output if output else ''
 
 
 class CommonFile(QiModel):
+    """
+    Common File Manager
+    Format: category/filename.suffix
+    """
     filename: str
     category: Optional[str] = ''
     suffix: Optional[str] = ''
@@ -28,36 +42,39 @@ class CommonFile(QiModel):
                          is_elf=is_elf,
                          **kwargs)
 
+    # noinspection PyMethodParameters
+    @validator('filename')
+    def __filename(cls, v: Any) -> Any:
+        if not v:
+            raise ValueError('Value is empty!')
+        return v
+
     def __str__(self):
         return '<{} object: {} at {}>'.format(
             self.__class__.__name__,
-            self.path_str,
+            self.path,
             hex(id(self))
         )
 
     @property
-    def path_str(self) -> str:
-        if self.category == '':
-            prefix = ''
-        else:
-            prefix = f'{self.category}/'
-        if self.suffix == '':
-            suffix = ''
-        else:
-            suffix = f'.{self.suffix}'
-        return f'{prefix}{self.filename}{suffix}'
+    def path(self) -> Path:
+        suffix = f'.{self.suffix}' if self.suffix else ''
+        return Path(self.category, f'{self.filename}{suffix}')
 
     @property
-    def path(self) -> Path:
-        return Path(self.path_str)
+    def exists(self) -> bool:
+        return self.path.is_file()
 
     def read(self) -> Any:
         if not self.exists:
-            return None
+            raise DataCheckError(f'{self.path} not found!')
         if self.is_elf:
             return self.path.read_bytes()
         else:
-            return self.path.read_text()
+            text = self.path.read_text()
+            if text.endswith('\n') and NEWLINE:
+                return text[:-1]
+            return text
 
     def write(self, data: Any) -> int:
         if not self.path.parent.is_dir():
@@ -65,113 +82,156 @@ class CommonFile(QiModel):
         if self.is_elf:
             return self.path.write_bytes(data)
         else:
+            # Add a new line for text
+            if NEWLINE:
+                data += '\n'
             return self.path.write_text(data)
 
     def delete(self):
         self.path.unlink(True)
 
-    @property
-    def exists(self) -> bool:
-        return self.path.is_file()
+
+class DataFile(CommonFile):
+    """
+    Data File Manager
+    Use @executor() to manage automatically
+    """
+
+    def _exe_pre(self, *args, **kwargs):
+        pass
+
+    # noinspection PyMethodMayBeStatic, PyUnusedLocal
+    def _exe_end(self, output, input_args: tuple, input_kwargs: dict):
+        if not output:
+            raise DataCheckError(f'No output!')
+        return output
+
+    def executor(self, read: bool = True, write: bool = True) -> Callable:
+        def __func(func: Callable) -> Callable:
+            @wraps(func)
+            def __wrapper(*args, **kwargs) -> Any:
+                # Pre-process function
+                self._exe_pre(*args, **kwargs)
+                # Read data, continue when failed
+                # Note: No check if succeed
+                if read:
+                    try:
+                        return self.read()
+                    except DataCheckError:
+                        pass
+                # Execute function
+                output = func(*args, **kwargs)
+                # After-process function
+                output = self._exe_end(output, args, kwargs)
+                # Write data and return
+                if write:
+                    self.write(output)
+                return output
+
+            return __wrapper
+
+        return __func
 
 
-class Cache(CommonFile):
+class Cache(DataFile):
     enable: Optional[bool] = CACHE_ENABLE
-    _no_init: bool = False
-    _header: bytes = None
+    no_init: Optional[bool] = False
+    header: Optional[bytes] = None
 
     def __init__(self,
-                 filename: str,
+                 filename: str = None,
                  category: str = None,
                  suffix: str = None,
                  is_elf: bool = None,
-                 enable: bool = None):
-        super().__init__(filename, category, suffix, is_elf, enable=enable)
+                 enable: bool = None,
+                 no_init: bool = False,
+                 header: Union[str, bytes] = b''):
+        if no_init:
+            filename = '.no-init'
+        if isinstance(header, str):
+            header = header.encode()
+        super().__init__(
+            filename, category, suffix, is_elf,
+            enable=enable, no_init=no_init, header=header
+        )
 
     @staticmethod
     def encode(content: Union[str, bytes],
                header: Union[str, bytes] = None) -> str:
         if isinstance(content, str):
-            content = content.encode('utf-8')
+            content = content.encode()
         if header is not None:
             if isinstance(header, str):
-                header = header.encode('utf-8')
+                header = header.encode()
             content = header + content
-        return hash_str(content).hexdigest()
-
-    @classmethod
-    def create(cls,
-               content: Union[str, bytes],
-               header: Union[str, bytes] = None,
-               enable: bool = None):
-        return cls(cls.encode(content, header), enable=enable)
-
-    @classmethod
-    def late_init(cls, header: Union[str, bytes] = None):
-        output = cls('.no-init')
-        output._no_init = True
-        output._header = header
-        return output
+        return hash_encode(content)
 
     @property
-    def path_str(self) -> str:
-        return 'cache/' + super().path_str
+    def path(self) -> Path:
+        return Path('cache', super().path)
 
     @staticmethod
-    def data_check(data: bytes) -> None:
+    def _exe_pre_encode(arg: Any) -> bytes:
+        # TODO: Encode?
         pass
 
+    def _exe_pre(self, *args, **kwargs):
+        if self.no_init:
+            # Read the first str/bytes arg for generating filename
+            # Read cache flag (or the last arg) to enable cache
+            input_arg = _get_first_arg(args)
+            if not input_arg:
+                input_arg = _get_first_arg(kwargs.values())
+            if not input_arg:
+                raise DataCheckError('Cannot specify filename!')
+            self.filename = self.encode(input_arg, self.header)
+            if isinstance(kwargs.get('cache', None), bool):
+                self.enable = kwargs['cache']
+            elif isinstance(args[-1], bool):
+                self.enable = args[-1]
+            else:
+                self.enable = True
+            self.enable = self.enable and CACHE_ENABLE
+
     def __call__(self, func: Callable):
-        def wrapper(*args, **kwargs):
-            if self._no_init:
-                # Read the first arg for generating filename
-                # Read cache flag (or the last arg) to enable cache
-                self.filename = self.encode(args[0], self._header)
-                if isinstance(kwargs.get('cache', None), bool):
-                    self.enable = kwargs['cache']
-                elif isinstance(args[-1], bool):
-                    self.enable = args[-1]
-                else:
-                    self.enable = CACHE_ENABLE
-            if self.exists and self.enable:
-                return self.read()
-            output = func(*args, **kwargs)
-            self.data_check(output)
-            if self.enable:
-                self.write(output)
-            return output
-
-        return wrapper
+        return self.executor(self.enable, self.enable)(func)
 
 
-class Config(CommonFile):
+class Data(DataFile):
+    @property
+    def path(self) -> Path:
+        return Path('data', super().path)
+
+
+class ConfigFile(CommonFile):
+    """
+    Config File Manager
+    Use reader() and writer() to handle different types
+    """
     is_elf: bool = False
 
-    def __init__(self,
-                 filename: str,
-                 category: str = None,
-                 suffix: str = None):
-        super().__init__(filename, category, suffix)
-
-    @property
-    def path_str(self) -> str:
-        return 'config/' + super().path_str
-
     @staticmethod
-    def _read_data(text: str) -> dict:
+    def reader(source: Any) -> dict:
         raise NotImplementedError
 
-    def read(self, target_model: ModelMetaclass = None) -> Union[dict, BaseModel]:
-        output = self._read_data(super().read())
+    @staticmethod
+    def writer(config: dict) -> Any:
+        raise NotImplementedError
+
+    def read(self, target_model=None) -> Any:
+        output = self.reader(super().read())
         if target_model is None:
             return output
         return target_model(**output)
 
-    @staticmethod
-    def _write_data(data: dict) -> str:
-        raise NotImplementedError
+    def write(self, data: Union[dict, object]) -> int:
+        if isinstance(data, object):
+            data = data.__dict__
+        return super().write(self.writer(data))
 
-    def write(self, data: Union[dict, BaseModel]) -> int:
-        if isinstance(data, BaseModel):
-            data = data.dict()
-        return super().write(self._write_data(data))
+
+# noinspection PyAbstractClass
+class Config(ConfigFile):
+    @property
+    def path(self) -> Path:
+        return Path('config', super().path)

@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "engine": {
+      "description": "定义的TTS引擎",
+      "type": "string",
+      "default": "default"
+    },
+    "access": {
+      "description": "对于特定引擎的额外设置",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "账号ID，参见服务商给出的配置说明",
+          "type": "string",
+          "default": ""
+        },
+        "secret": {
+          "description": "账号密码，参见服务商给出的配置说明",
+          "type": "string",
+          "default": ""
+        },
+        "app_key": {
+          "description": "服务appKey，参见服务商给出的配置说明",
+          "type": "string",
+          "default": ""
+        }
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "engine": {
+        "enum": [
+          "aliyun"
+        ]
+      }
+    },
+    "required": [
+      "engine"
+    ]
+  },
+  "then": {
+    "properties": {
+      "access": {
+        "required": [
+          "id",
+          "secret",
+          "app_key"
+        ]
+      }
+    },
+    "required": [
+      "access"
+    ]
+  },
+  "else": {
+    "required": [
+      "engine"
+    ]
+  }
+}
