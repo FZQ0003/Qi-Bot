@@ -1,4 +1,6 @@
-graia-ariadne[full] ~= 0.5
+graia-ariadne[graia] ~= 0.6.15
+arclet-alconna ~= 0.8.1
+arclet-alconna-graia ~= 0.0.7.4
 pyyaml ~= 6.0
 # pyttsx3 ~= 2.90
 # pypiwin32; sys_platform == 'win32'
