@@ -1,5 +1,3 @@
-import asyncio
-
 from arclet.alconna import Alconna, Args, AllParam, Arpamar
 from arclet.alconna.graia import AlconnaDispatcher
 from graia.ariadne.app import Ariadne
@@ -7,6 +5,7 @@ from graia.ariadne.event.message import GroupMessage
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Voice, Source
 from graia.ariadne.model import Group
+from graia.ariadne.util.async_exec import io_bound
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
 
@@ -27,6 +26,7 @@ command = Alconna(
 engine = AliyunTTSEngine()
 
 
+@io_bound
 def convert_text(text):
     return Voice(data_bytes=engine.convert(text))
 
@@ -43,9 +43,7 @@ async def tts_group_listener(app: Ariadne,
     if len(text) == 0:
         return
     try:
-        audio = await asyncio.get_running_loop().run_in_executor(
-            None, convert_text, text
-        )
+        audio = await convert_text(text)
         await app.sendMessage(group, MessageChain([audio]))
     except DataCheckError:
         await app.sendMessage(group,
