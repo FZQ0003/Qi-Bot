@@ -43,9 +43,9 @@ async def tts_group_listener(app: Ariadne,
     if len(text) == 0:
         return
     try:
-        audio = await convert_text(text)
+        audio: Voice = await convert_text(text)
         await app.sendMessage(group, MessageChain([audio]))
     except DataCheckError:
         await app.sendMessage(group,
                               MessageChain('???'),
-                              quote=message.getFirst(Source))
+                              quote=message)
