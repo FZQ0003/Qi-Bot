@@ -14,7 +14,8 @@ channel.author("F_Qilin")
 
 @channel.use(ListenerSchema(listening_events=[NudgeEvent]))
 async def getup(app: Ariadne, event: NudgeEvent):
-    if event.context_type == "group" and event.target == bot.account:
-        await app.sendNudge(event.supplicant, event.group_id)
-    elif event.context_type == "friend":
-        await app.sendNudge(event.friend_id)
+    if event.supplicant != bot.account and event.target == bot.account:
+        if event.context_type == "group":
+            await app.sendNudge(event.supplicant, event.group_id)
+        elif event.context_type == "friend":
+            await app.sendNudge(event.friend_id)
