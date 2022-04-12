@@ -63,7 +63,7 @@ if [ -z "$ENV_DISPLAY" ]; then
     ENV_DISPLAY="bot"
 fi
 if [ -z "$ENV_REQ" ]; then
-    ENV_REQ="graia-ariadne[full]"
+    ENV_REQ="graia-ariadne[graia] arclet-alconna arclet-alconna-graia"
 fi
 
 # Args
