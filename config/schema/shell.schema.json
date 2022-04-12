@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "timeout": {
+      "description": "单条命令允许的运行时长，单位为秒",
+      "type": "number",
+      "default": 30
+    },
+    "shell_exec": {
+      "description": "使用的终端，格式参考subprocess.Popen(args, shell=False)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "default": [
+        "bash"
+      ]
+    },
+    "check_dir": {
+      "description": "临时目录",
+      "type": "string"
+    }
+  }
+}

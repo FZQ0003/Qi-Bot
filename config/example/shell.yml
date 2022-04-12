@@ -1,0 +1,4 @@
+timeout: 30
+shell_exec:
+  - bash
+check_dir: /tmp/shell
