@@ -2,3 +2,5 @@ timeout: 30
 shell_exec:
   - bash
 check_dir: /tmp/shell
+output_replace:
+  string-1: string-2

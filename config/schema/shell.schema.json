@@ -21,6 +21,13 @@
     "check_dir": {
       "description": "临时目录",
       "type": "string"
+    },
+    "output_replace": {
+      "description": "对输出内容进行替换",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
     }
   }
 }

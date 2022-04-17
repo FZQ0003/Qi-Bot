@@ -14,6 +14,7 @@ from .time import get_str_time
 TIMEOUT = config.timeout
 SHELL_EXEC = config.shell_exec
 CHECK_DIR = config.check_dir
+REPLACE = config.output_replace
 
 
 class CompletedProcess(object):
@@ -38,11 +39,14 @@ class CompletedProcess(object):
             return '<BIN>'
 
     def as_string(self) -> str:
-        return '{}{}{}'.format(
+        output = '{}{}{}'.format(
             f'Return code: {self.code}\n',
             f'\nSTDOUT: \n{self.bytes_decode(self.stdout)}' if self.stdout else '',
             f'\nSTDERR: \n{self.bytes_decode(self.stderr)}' if self.stderr else ''
         )[:-1]
+        for item in REPLACE.items():
+            output = output.replace(item[0], item[1])
+        return output
 
     def __str__(self) -> str:
         return self.as_string()
