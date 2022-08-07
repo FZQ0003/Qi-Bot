@@ -19,11 +19,6 @@
       "type": "string",
       "default": "ServiceVerifyKey"
     },
-    "log": {
-      "description": "启用心跳记录",
-      "type": "boolean",
-      "default": false
-    },
     "modules": {
       "description": "Saya 模块",
       "type": "array",

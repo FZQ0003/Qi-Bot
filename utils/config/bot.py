@@ -9,7 +9,6 @@ class BotConfigModel(QiModel):
     host: str
     account: int
     verify_key: Optional[str] = 'ServiceVerifyKey'
-    log: Optional[bool] = False
     modules: Optional[list] = []
 
     # noinspection PyMethodParameters
