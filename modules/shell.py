@@ -26,8 +26,8 @@ command = Alconna(
     headers=['/'],
     command='sh',
     options=[
-        Option('--command|-c', Args['*cmd': str]),
-        Option('--env', Args['**args': str])
+        Option('--command|-c', Args['cmd;S': str]),
+        Option('--env', Args['args;W': str])
     ]
 )
 inc = InterruptControl(Saya.current().broadcast)

@@ -9,7 +9,7 @@ from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
 from loguru import logger
 
-from utils.config import bot as config
+from utils.config import bot
 
 
 def main():
@@ -21,11 +21,11 @@ def main():
         connect_info=DefaultAdapter(
             broadcast=bcc,
             mirai_session=MiraiSession(
-                host=config.host,
-                verify_key=config.verify_key,
-                account=config.account
+                host=bot.host,
+                verify_key=bot.verify_key,
+                account=bot.account
             ),
-            log=config.log
+            log=False
         ),
         disable_logo=True,
         disable_telemetry=True
@@ -36,8 +36,8 @@ def main():
     saya = Saya(bcc)
     saya.install_behaviours(BroadcastBehaviour(bcc))
     with saya.module_context():
-        if config.modules:
-            for module in config.modules:
+        if bot.modules:
+            for module in bot.modules:
                 saya.require(module)
         else:
             logger.warning('No module loaded. Use auto mode...')
@@ -47,8 +47,8 @@ def main():
                     module_name = "modules." + module_name
                     try:
                         saya.require(module_name)
-                    except ImportError:
-                        logger.error(f'Failed to require {module_name}.')
+                    except ImportError as e:
+                        logger.error(f'Failed to require {module_name}: {e.msg}.')
 
     # Launch
     app.launch_blocking()
