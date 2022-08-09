@@ -1,11 +1,11 @@
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseConfig, BaseModel, Field, validator
 
 
 class QiModel(BaseModel):
 
-    class Config:
+    class Config(BaseConfig):
         arbitrary_types_allowed = True
 
     @validator('*', pre=True)

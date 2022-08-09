@@ -7,19 +7,29 @@ from graia.ariadne.model import MiraiSession
 from graia.broadcast import Broadcast
 from graia.saya import Saya
 from graia.saya.builtins.broadcast import BroadcastBehaviour
-from loguru import logger
 
 from utils.config import bot
+from utils.logger import logger
+from utils.web import server
+from utils.web.broadcast import Global as WebBccGlobal
+
+
+async def launch_bot(app: Ariadne):
+    async with app:
+        await server.serve()
 
 
 def main():
     """Main function"""
 
     # Init
-    bcc = Broadcast(loop=asyncio.new_event_loop())
     app = Ariadne(
         connect_info=DefaultAdapter(
-            broadcast=bcc,
+            broadcast=(
+                bcc := Broadcast(loop=(
+                    loop := asyncio.new_event_loop()
+                ))
+            ),
             mirai_session=MiraiSession(
                 host=bot.host,
                 verify_key=bot.verify_key,
@@ -30,6 +40,9 @@ def main():
         disable_logo=True,
         disable_telemetry=True
     )
+
+    # Web Settings
+    WebBccGlobal.broadcast = app.broadcast
 
     # Load modules
     # noinspection SpellCheckingInspection
@@ -51,7 +64,8 @@ def main():
                         logger.error(f'Failed to require {module_name}: {e.msg}.')
 
     # Launch
-    app.launch_blocking()
+    # app.launch_blocking()
+    loop.run_until_complete(launch_bot(app))
 
 
 if __name__ == '__main__':
