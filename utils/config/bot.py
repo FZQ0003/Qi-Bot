@@ -1,4 +1,3 @@
-from typing import Optional
 from urllib.request import urlopen
 
 from ..file import DefaultConfig
@@ -8,8 +7,9 @@ from ..model import QiModel, validator
 class BotConfigModel(QiModel):
     host: str
     account: int
-    verify_key: Optional[str] = 'ServiceVerifyKey'
-    modules: Optional[list] = []
+    web: bool = True
+    verify_key: str = 'ServiceVerifyKey'
+    modules: list = []
 
     # noinspection PyMethodParameters
     @validator('host')

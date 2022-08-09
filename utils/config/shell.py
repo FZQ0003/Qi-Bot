@@ -1,4 +1,4 @@
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict
 
 from .log import _config_warning
 from ..file import DefaultConfig
@@ -9,7 +9,7 @@ class ShellConfigModel(QiModel):
     timeout: Union[int, float] = 30
     shell_exec: Union[List[str], str] = ['bash']
     check_dir: str = 'tmp/shell'
-    output_replace: Optional[Dict[str, str]] = {}
+    output_replace: Dict[str, str] = {}
 
     # noinspection PyMethodParameters
     @validator('timeout')

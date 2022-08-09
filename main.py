@@ -10,13 +10,19 @@ from graia.saya.builtins.broadcast import BroadcastBehaviour
 
 from utils.config import bot
 from utils.logger import logger
-from utils.web import server
-from utils.web.broadcast import Global as WebBccGlobal
 
+if bot.web:
+    try:
+        from utils.web import server
+        from utils.web.broadcast import Global as WebBccGlobal
 
-async def launch_bot(app: Ariadne):
-    async with app:
-        await server.serve()
+        async def launch_bot(app: Ariadne):
+            async with app:
+                await server.serve()
+    except ImportError:
+        logger.warning('Uvicorn/FastAPI not found, disable web service.')
+        bot.web = False
+        server, WebBccGlobal = None, None
 
 
 def main():
@@ -41,8 +47,9 @@ def main():
         disable_telemetry=True
     )
 
-    # Web Settings
-    WebBccGlobal.broadcast = app.broadcast
+    if bot.web:
+        # Web Settings
+        WebBccGlobal.broadcast = app.broadcast
 
     # Load modules
     # noinspection SpellCheckingInspection
@@ -64,8 +71,11 @@ def main():
                         logger.error(f'Failed to require {module_name}: {e.msg}.')
 
     # Launch
-    # app.launch_blocking()
-    loop.run_until_complete(launch_bot(app))
+    if bot.web:
+        loop.run_until_complete(launch_bot(app))
+    else:
+        app.launch_blocking()
+
 
 
 if __name__ == '__main__':
