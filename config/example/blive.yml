@@ -1,0 +1,12 @@
+rooms:
+  123456:
+    enable: false
+    format: null
+    name: some_up
+    groups:
+      - 123456789
+      - 987654321
+    at_all_level: 0
+format:
+  start: '{name} 直播了！\n{title}\n速来 -> {link}'
+  end: '{name} 的直播结束了！'

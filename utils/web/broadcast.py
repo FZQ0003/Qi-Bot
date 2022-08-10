@@ -64,7 +64,11 @@ def use_broadcast(header: str,
             bcc = broadcast
 
         def __result(result):
+            if result is None:
+                logger.info(f'{header}: failure')
+                return {'event_header': header, 'status': 'failure'}
             bcc.postEvent(FastAPIMessageEvent(header, result))
+            logger.info(f'{header}: success')
             if return_result:
                 return result
             return {'event_header': header, 'status': 'success'}

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "rooms": {
+      "description": "直播间房间信息",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^\\d+$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enable": {
+            "description": "启用该直播间推送",
+            "type": "boolean",
+            "default": true
+          },
+          "format": {
+            "description": "单独的格式化字符串",
+            "type": [
+              "string",
+              "null"
+            ],
+            "$ref": "#/$defs/format",
+            "default": null
+          },
+          "name": {
+            "description": "名称，用于消息推送",
+            "type": "string",
+            "default": ""
+          },
+          "groups": {
+            "description": "推送群列表",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "default": []
+          },
+          "at_all_level": {
+            "description": "是否@全体成员，需要有管理员权限",
+            "enum": [0, 1, 2],
+            "default": 0
+          }
+        }
+      }
+    },
+    "format": {
+      "description": "全局格式化字符串",
+      "type": "object",
+      "$ref": "#/$defs/format"
+    }
+  },
+  "required": [
+    "rooms"
+  ],
+  "$defs": {
+    "format": {
+      "properties": {
+        "start": {
+          "description": "直播开始提醒",
+          "type": "string",
+          "default": "{name} 直播了！\n{title}\n速来 -> {link}"
+        },
+        "end": {
+          "description": "直播结束提醒",
+          "type": "string",
+          "default": "{name} 的直播结束了！"
+        }
+      }
+    }
+  }
+}
