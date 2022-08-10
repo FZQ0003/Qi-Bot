@@ -31,7 +31,6 @@ class BliveRoomConfigModel(QiModel):
 
 class BliveConfigModel(QiModel):
     rooms: Dict[int, BliveRoomConfigModel] = {}
-    format_string: str = '{name} 直播了！\n{title}\n速来 -> {link}'
     format: LiveFormat = LiveFormat(
         start='{name} 直播了！\n{title}\n速来 -> {link}',
         end='{name} 的直播结束了！'

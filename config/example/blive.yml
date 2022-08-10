@@ -8,5 +8,5 @@ rooms:
       - 987654321
     at_all_level: 0
 format:
-  start: '{name} 直播了！\n{title}\n速来 -> {link}'
-  end: '{name} 的直播结束了！'
+  start: "{name} 直播了！\n{title}\n速来 -> {link}"
+  end: "{name} 的直播结束了！"
