@@ -20,7 +20,9 @@
 
 ### 关于使用旧版Ariadne及相关模块的说明
 
-不为什么。
+坏了，全世界就我一只用0.6.x的了xwx
+
+> Ref: [你急我也急](https://github.com/GraiaCommunity/Docs/commit/fc344902ddfb99813431b1a822ce1bb7f04ec164)
 
 ### 如何迁移至新版Ariadne
 
