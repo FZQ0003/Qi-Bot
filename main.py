@@ -68,7 +68,7 @@ def main():
                     try:
                         saya.require(module_name)
                     except ImportError as e:
-                        logger.error(f'Failed to require {module_name}: {e.msg}.')
+                        logger.error(f'Failed to require {module_name}: {e.msg}')
 
     # Launch
     if bot.web:
