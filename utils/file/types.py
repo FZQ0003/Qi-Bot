@@ -97,11 +97,11 @@ class DataFile(CommonFile):
     Use @executor() to manage automatically
     """
 
-    def _exe_pre(self, *args, **kwargs):
+    def _exec_pre(self, *args, **kwargs):
         pass
 
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
-    def _exe_end(self, output, input_args: tuple, input_kwargs: dict):
+    def _exec_post(self, output, input_args: tuple, input_kwargs: dict):
         if not output:
             raise DataCheckError(f'No output!')
         return output
@@ -111,7 +111,7 @@ class DataFile(CommonFile):
             @wraps(func)
             def __wrapper(*args, **kwargs) -> Any:
                 # Pre-process function
-                self._exe_pre(*args, **kwargs)
+                self._exec_pre(*args, **kwargs)
                 # Read data, continue when failed
                 # Note: No check if succeed
                 if read:
@@ -122,7 +122,7 @@ class DataFile(CommonFile):
                 # Execute function
                 output = func(*args, **kwargs)
                 # After-process function
-                output = self._exe_end(output, args, kwargs)
+                output = self._exec_post(output, args, kwargs)
                 # Write data and return
                 if write:
                     self.write(output)
@@ -175,7 +175,7 @@ class Cache(DataFile):
         # TODO: Encode?
         pass
 
-    def _exe_pre(self, *args, **kwargs):
+    def _exec_pre(self, *args, **kwargs):
         if self.no_init:
             # Read the first str/bytes arg for generating filename
             # Read cache flag (or the last arg) to enable cache

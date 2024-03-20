@@ -36,8 +36,8 @@ class AudioCache(AudioFile, Cache):
                  header: Union[str, bytes] = b''):
         super().__init__(filename, enable=enable, no_init=no_init, header=header)
 
-    def _exe_end(self, output, input_args: tuple, input_kwargs: dict):
-        output = super()._exe_end(output, input_args, input_kwargs)
+    def _exec_post(self, output, input_args: tuple, input_kwargs: dict):
+        output = super()._exec_post(output, input_args, input_kwargs)
         if b'#!SILK_V3' not in output:
             output = pysilk.encode(output)
         if len(output) < 512:
