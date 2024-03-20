@@ -1,15 +1,11 @@
 #!/bin/bash
 # Author: F_Qilin
-# Version: 1.1-ariadne
-# Note: This script use "python -m venv" bundled with python3.3+.
-#       On some Debian-based systems, python3-venv is needed to install.
-#       If you use python2 as python, consider run "alias python=python3".
-#       On Windows, you can use Git Bash to run this script.
-#       Other systems (eg. MacOS) are not tested, use at your own risk.
+# Version: 1.2-ariadne
+# Note: See show_help().
 
-# Envs: ENV_NAME, ENV_DISPLAY, ENV_REQ
+# Envs: ENV_NAME, ENV_DISPLAY, ENV_REQ, ENV_REPOS
 # Args: ARG_GLOBAL, ARG_CLEAR
-# Flags: FLAG_NEW, FLAG_REMOVE, FLAG_UPDATE, FLAG_EXIST
+# Flags: FLAG_NEW, FLAG_REMOVE, FLAG_UPDATE, FLAG_EXIST, FLAG_GIT
 # Vars: PY_DIR
 
 ### Functions
@@ -22,19 +18,36 @@ show_help() {
   echo "Options:"
   echo "  -n, --new           Create or reinstall a new virtual environment."
   echo "      --local         Do not add global site packages."
-  echo "      --requirement   Use requirements.txt instead of $ENV_REQ."
-  echo "      --name name     Directory name (default $ENV_NAME)."
-  echo "      --display name  Display name for prompt (default $ENV_DISPLAY)."
+  echo "      --requirement   Use requirements.txt instead of ENV_REQ."
+  echo "      --name name     Directory name instead of ENV_NAME."
+  echo "      --display name  Display name for prompt instead of ENV_DISPLAY."
   echo "  -r, --remove        Remove and delete current environment."
   echo "  -u, --update        Update packages of the current environment."
   echo "  -h, --help          Show this help and exit."
   echo "  -v, --version       Show the version and exit."
+  echo
+  echo "Options for development:"
+  echo "      --use-git       Install core packages from git instead of pypi."
+  echo "                      You will need to manually install other packages."
+  echo
+  echo "Environment variables:"
+  echo "  ENV_NAME            Directory name (default: $ENV_NAME)."
+  echo "  ENV_DISPLAY         Display name for prompt (default: $ENV_DISPLAY)."
+  echo "  ENV_REQ             Initial packages (default: $ENV_REQ)."
+  echo "  ENV_REPOS           Git repositories of core packages (shell array)."
+  echo "                      eg. ('repo1.git' 'repo2.git' ...)"
+  echo
+  echo "This script uses \"python -m venv\" bundled with python3.3+."
+  echo "On some Debian-based systems, python3-venv is needed to install."
+  echo "If you use python2 as python, consider run \"alias python=python3\"."
+  echo "On Windows, you can use Git Bash to run this script."
+  echo "Other systems (eg. MacOS) are not tested, use at your own risk."
   exit
 }
 
 # Version
 show_version() {
-  echo "Script version: 1.1-ariadne."
+  echo "Script version: 1.2-ariadne."
   echo "Written by F_Qilin."
   exit
 }
@@ -46,18 +59,24 @@ find_python() {
 
 # Install
 # shellcheck disable=SC2086
-venv_install() {
+venv_init() {
   # virtualenv: --activators bash --prompt "($ENV_DISPLAY) "
   python -m venv "$ENV_NAME" $ARG_CLEAR $ARG_GLOBAL --prompt "$ENV_DISPLAY"
   find_python
-  "$PY_DIR" -m pip install $ENV_REQ
 }
 
 # Update
 # shellcheck disable=SC2086
 venv_update() {
   # PY_DIR always has value, no need to check
-  "$PY_DIR" -m pip install $ENV_REQ --upgrade
+  if [ $FLAG_GIT ]; then
+    for repo in "${ENV_REPOS[@]}"; do
+      # "--force-reinstall" can also reinstall pypi packages.
+      "$PY_DIR" -m pip install "git+$repo" --force-reinstall
+    done
+  else
+    "$PY_DIR" -m pip install $ENV_REQ --upgrade
+  fi
 }
 
 # Remove
@@ -75,7 +94,7 @@ abort() {
 
 # Environment
 if [ -z "$ENV_NAME" ]; then
-  ENV_NAME="graia-ariadne"
+  ENV_NAME="venv"
 fi
 if [ -z "$ENV_DISPLAY" ]; then
   ENV_DISPLAY="bot"
@@ -83,8 +102,17 @@ fi
 if [ -z "$ENV_REQ" ]; then
   ENV_REQ="graia-ariadne[graia] arclet-alconna arclet-alconna-graia"
 fi
+if [ -z "$ENV_REPOS" ]; then
+  ENV_REPOS=(
+    "https://github.com/GraiaProject/Ariadne.git"
+    "https://github.com/GraiaProject/Scheduler.git"
+    "https://github.com/GraiaProject/Saya.git"
+    "https://github.com/ArcletProject/Alconna.git"
+    "https://github.com/ArcletProject/Alconna-Graia.git"
+  )
+fi
 
-# Args
+# Parse args
 # Note: Flags are parsed as strings,
 #       so 0 or others -> true, empty or not set -> false.
 ARG_GLOBAL="--system-site-packages"
@@ -99,6 +127,9 @@ while [ -n "$1" ]; do
     ;;
   "--update" | "-u")
     FLAG_UPDATE=0
+    ;;
+  "--use-git")
+    FLAG_GIT=0
     ;;
   "--local")
     ARG_GLOBAL=
@@ -165,7 +196,8 @@ if [ $FLAG_NEW ]; then
       ;;
     esac
   fi
-  venv_install
+  venv_init
+  venv_update
 elif [ $FLAG_REMOVE ]; then
   echo "[WARNING] Will delete directory: \"$ENV_NAME\". Continue?"
   read -rp "          [Y]Yes, [n]no: " REPLY
@@ -176,12 +208,11 @@ elif [ $FLAG_REMOVE ]; then
   esac
   venv_remove
 elif [ $FLAG_UPDATE ]; then
-  if [ $FLAG_EXIST ]; then
-    venv_update
-  else
+  if [ ! $FLAG_EXIST ]; then
     echo "[INFO] Environment not found. Installing..."
-    venv_install
+    venv_init
   fi
+  venv_update
 else
   echo "[ERROR] Unknown operation. Use \"$0 -h\" for help."
   exit 1
