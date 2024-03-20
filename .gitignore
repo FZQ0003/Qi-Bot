@@ -1,6 +1,18 @@
 # Project files
 .idea/
+
+# Venv
+__pypackages__/
 graia-ariadne/
+graia-avilla/
+venv/
+
+# PDM
+.pdm-python
+pdm.lock
+
+# Archive
+archive/
 
 # Cache
 __pycache__/
