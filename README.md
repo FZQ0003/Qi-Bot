@@ -1,6 +1,7 @@
 # Qi-Bot
 
-> Creating directory...
+> Creating directory...  
+> 注：项目已严重过时，即将重构。主体部分暂停更新。
 
 ## 计划开发的功能
 
