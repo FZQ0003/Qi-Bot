@@ -3,7 +3,7 @@ from ..logger import logger
 
 # TODO: DataCheckError
 class DataCheckError(ValueError):
-    pass
+    ...
 
 
 def _import_warning(e: ImportError, filetype: str):

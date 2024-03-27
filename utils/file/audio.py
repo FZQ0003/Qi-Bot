@@ -1,3 +1,4 @@
+"""TODO: Audio file manager."""
 from typing import Union
 
 import pysilk
@@ -9,7 +10,7 @@ class AudioFile(CommonFile):
     """Silk (V3) File for QQ"""
     category: str = 'audio'
     suffix: str = 'slk'
-    is_elf: bool = True
+    is_bin: bool = True
 
     def __init__(self, filename: str, **kwargs):
         super().__init__(filename, **kwargs)

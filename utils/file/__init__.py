@@ -1,14 +1,9 @@
+"""TODO: Qi-Bot file manager."""
+# DO NOT CHANGE THE ORDER!
 from .error import DataCheckError, _import_warning
-from .types import CommonFile, DataFile, ConfigFile, Cache, Data, Config
-
-# Must import after .types
+from .base import CommonFile, DataFile, ConfigFile, Data, Config
+from .cache import Cache
 from .json import JsonMixin, JsonConfig, JsonData
-
-# pysilk
-try:
-    from .audio import AudioFile, AudioCache
-except ModuleNotFoundError as e:
-    _import_warning(e, 'audio')
 
 # yaml
 try:
@@ -18,3 +13,9 @@ try:
 except ModuleNotFoundError as e:
     _import_warning(e, 'yaml')
     DefaultConfig = JsonConfig
+
+# pysilk
+# try:
+#     from .audio import AudioFile, AudioCache
+# except ModuleNotFoundError as e:
+#     _import_warning(e, 'audio')

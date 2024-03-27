@@ -1,33 +1,25 @@
-from typing import Union, List, Dict
-
-from .log import _config_warning
-from ..file import DefaultConfig
-from ..model import QiModel, validator
+"""TODO: Virtual shell config model."""
+from ..model import QiModel, field_validator
 
 
+# TODO: Move to module?
 class ShellConfigModel(QiModel):
-    timeout: Union[int, float] = 30
-    shell_exec: Union[List[str], str] = ['bash']
+    """Model for virtual shell config."""
+    timeout: int | float = 30
+    shell_exec: list[str] = ['bash']
     check_dir: str = 'tmp/shell'
-    output_replace: Dict[str, str] = {}
+    output_replace: dict[str, str] = {}
 
-    # noinspection PyMethodParameters
-    @validator('timeout')
-    def __timeout(cls, v):
-        return v if v > 5 else 5
+    # noinspection PyNestedDecorators
+    @field_validator('timeout')
+    @classmethod
+    def __timeout(cls, data: int | float) -> int | float:
+        return data if data > 5 else 5
 
-    # noinspection PyMethodParameters
-    @validator('shell_exec')
-    def __shell_exec(cls, v):
-        if isinstance(v, str):
-            return v.split(' ')
-        return v
-
-
-config_file = DefaultConfig('shell')
-config: ShellConfigModel
-if config_file.exists:
-    config = config_file.read(ShellConfigModel)
-else:
-    _config_warning(config_file.path)
-    config = ShellConfigModel()
+    # noinspection PyNestedDecorators
+    @field_validator('shell_exec', mode='before')
+    @classmethod
+    def __shell_exec(cls, data: list[str] | str) -> list[str]:
+        if isinstance(data, str):
+            return data.split(' ')
+        return data

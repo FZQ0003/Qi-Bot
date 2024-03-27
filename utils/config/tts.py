@@ -1,17 +1,8 @@
-from .log import _config_warning
-from ..file import DefaultConfig
+"""TODO: TTS config model."""
 from ..model import QiModel
 
 
 class TTSConfigModel(QiModel):
+    """Model for Text To Speech (TTS) config."""
     engine: str = 'default'
     access: dict = {}
-
-
-config_file = DefaultConfig('tts')
-config: TTSConfigModel
-if config_file.exists:
-    config = config_file.read(TTSConfigModel)
-else:
-    _config_warning(config_file.path)
-    config = TTSConfigModel(engine='espeak')

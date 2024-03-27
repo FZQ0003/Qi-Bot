@@ -1,16 +1,9 @@
-from .log import _config_warning
-from ..file import DefaultConfig
+"""TODO: Web server config model."""
 from ..model import QiModel
+from ..model.types import Port
 
 
-class WebConfigModel(QiModel):
-    server_port: int = 5820
-
-
-config_file = DefaultConfig('web')
-config: WebConfigModel
-if config_file.exists:
-    config = config_file.read(WebConfigModel)
-else:
-    _config_warning(config_file.path)
-    config = WebConfigModel()
+class ServerConfigModel(QiModel):
+    """Model for internal web server config."""
+    enable: bool = False
+    port: Port = 5820

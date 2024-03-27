@@ -1,4 +1,39 @@
-host: 'http://localhost:8080'
-account: 1234567890
-verify_key: ServiceVerifyKey
-modules: []
+#$schema: './schema/bot.schema.json' # Not implemented yet.
+dry_run: False
+modules: '*'
+protocols:
+  - id: 'console'
+#  -
+#    id: 'mirai_api_http'
+#    host: 'localhost'
+#    port: 8080
+#    account: 1234567890
+#    access_token: 'ServiceVerifyKey'
+#file:
+#  cache:
+#    enable: True
+#    max_count: -1
+#    expire_days: 30
+#shell:
+#  timeout: 30
+#  shell_exec:
+#    - bash
+#  check_dir: /tmp/shell
+#  output_replace:
+#    string-1: string-2
+#tts:
+#  engine: 'default'
+#  access:
+#    id: 'id-for-online'
+#    secret: 'secret-for-online'
+#    app_key: 'app-key'
+#    extra: 'u-can-add-any-keys-u-like'
+#server:
+#  enable: False
+#  port: 5820
+#crypto:
+#  hash:
+#    algorithm: 'sha3_512'
+#  hmac:
+#    key: ''
+#    save_key: False

@@ -1,3 +1,4 @@
+"""JSON (built-in) file manager."""
 import json
 
 from . import Config, ConfigFile, Data
@@ -6,28 +7,23 @@ from ..model import QiModel
 
 class JsonMixin(QiModel):
     suffix: str = 'json'
-    is_elf: bool = False
+    is_bin: bool = False
 
     @staticmethod
-    def reader(source: str) -> dict:
-        return json.loads(source)
+    def loads(string: str) -> dict:
+        return json.loads(string)
 
     @staticmethod
-    def writer(config: dict) -> str:
-        return json.dumps(config, indent=2)
+    def dumps(data: dict) -> str:
+        return json.dumps(data, indent=2)
 
 
 class JsonConfig(JsonMixin, Config):
-
-    def __init__(self, filename: str, category: str = None):
-        super().__init__(filename, category)
+    ...
 
 
 class JsonData(JsonMixin, ConfigFile, Data):
 
-    def __init__(self, filename: str, category: str = None):
-        super().__init__(filename, category)
-
     @staticmethod
-    def writer(config: dict) -> str:
-        return json.dumps(config, separators=(',', ':'))
+    def dumps(data: dict) -> str:
+        return json.dumps(data, separators=(',', ':'))

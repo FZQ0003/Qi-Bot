@@ -1,5 +1,2 @@
-from .bot import config as bot
-# from .file import config as file
-from .shell import config as shell
-from .tts import config as tts
-from .web import config as web
+"""Qi-Bot config."""
+from .bot import bot_config
