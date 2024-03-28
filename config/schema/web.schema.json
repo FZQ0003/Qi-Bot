@@ -1,14 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Internal (Web) Server Config",
+  "description": "服务器相关配置",
   "type": "object",
   "properties": {
-    "server_port": {
+    "enable": {
+      "description": "是否启用内部服务器",
+      "type": "boolean",
+      "default": false
+    },
+    "port": {
       "description": "服务器端口",
       "type": "integer",
       "default": 5820
     }
   },
-  "required": [
-    "server_port"
-  ]
+  "if": {
+    "properties": {
+      "enable": {
+        "const": true
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "port"
+    ]
+  }
 }

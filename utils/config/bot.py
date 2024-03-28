@@ -1,4 +1,5 @@
 """Qi-Bot config model."""
+from .crypto import CryptoConfigModel
 from .file import FileConfigModel
 from .protocol import ProtocolTypes
 from .shell import ShellConfigModel
@@ -13,12 +14,13 @@ from ..model.types import Module
 class BotConfigModel(QiModel):
     """Model for bot config."""
     dry_run: bool = False
+    modules: list[Module] | None = None
+    protocols: list[ProtocolTypes] = []
     file: FileConfigModel = FileConfigModel()
     shell: ShellConfigModel = ShellConfigModel()
     tts: TTSConfigModel = TTSConfigModel()
     server: ServerConfigModel = ServerConfigModel()
-    protocols: list[ProtocolTypes] = []
-    modules: list[Module] | None = None
+    crypto: CryptoConfigModel = CryptoConfigModel()
 
     # noinspection PyNestedDecorators
     @field_validator('modules', mode='before')

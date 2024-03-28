@@ -1,35 +1,44 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Bot Config",
+  "description": "机器人配置",
   "type": "object",
   "properties": {
-    "host": {
-      "description": "HTTP API 服务运行的地址",
-      "type": "string",
-      "format": "uri",
-      "default": "http://localhost:8080"
-    },
-    "account": {
-      "description": "机器人 QQ",
-      "type": "integer",
-      "minimum": 10000,
-      "default": 1234567890
-    },
-    "verify_key": {
-      "description": "verifyKey",
-      "type": "string",
-      "default": "ServiceVerifyKey"
+    "dry_run": {
+      "description": "试运行，使用终端作为聊天界面",
+      "type": "boolean",
+      "default": false
     },
     "modules": {
       "description": "Saya 模块",
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": []
+      "anyOf": [
+        {
+          "const": "*"
+        },
+        {
+          "const": null
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\w+(\\.\\w+)*$"
+          }
+        }
+      ],
+      "default": "*"
+    },
+    "protocols": {
+      "$ref": "protocol.schema.json"
+    },
+    "file": {
+      "$ref": "file.schema.json"
+    },
+    "server": {
+      "$ref": "web.schema.json"
+    },
+    "crypto": {
+      "$ref": "crypto.schema.json"
     }
-  },
-  "required": [
-    "host",
-    "account"
-  ]
+  }
 }
