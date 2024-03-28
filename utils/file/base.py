@@ -62,8 +62,7 @@ class CommonFile(QiModel):
     @cached_property
     def path(self) -> Path:
         """Return a Path class of the file."""
-        suffix = f'.{self.suffix}' if self.suffix else ''
-        return Path(self.prefix, self.category, f'{self.filename}{suffix}')
+        return Path(self.prefix, self.category, f'{self.filename}{self.suffix}')
 
     @property
     def exists(self) -> bool:
@@ -199,7 +198,11 @@ class ConfigFile(CommonFile):
 
     def write(self, data: Model) -> int:
         if not isinstance(data, dict):
-            data = dict(data)
+            try:
+                data = data.model_dump()
+            except AttributeError:
+                # Warning: It cannot dump complex models!
+                data = dict(data)
         return super().write(self.dumps(data))
 
 

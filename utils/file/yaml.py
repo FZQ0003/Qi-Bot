@@ -6,7 +6,7 @@ from ..model import QiModel
 
 
 class YamlMixin(QiModel):
-    suffix: str = 'yml'
+    suffix: str = '.yml'
     is_bin: bool = False
 
     @staticmethod

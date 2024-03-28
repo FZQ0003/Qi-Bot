@@ -6,7 +6,7 @@ from ..model import QiModel
 
 
 class JsonMixin(QiModel):
-    suffix: str = 'json'
+    suffix: str = '.json'
     is_bin: bool = False
 
     @staticmethod
