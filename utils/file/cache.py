@@ -1,18 +1,11 @@
 """Cache file manager."""
-from typing import Callable
+from typing import Callable, Sequence
 
 from . import DataFile
-from ..crypto import hmac_encode
-from ..model import model_validator
+from ..config import bot_config
+from ..crypto import hmac_new
+from ..model import model_validator, field_validator
 from ..model.types import Filename
-from ..string import connect_str_or_bytes
-
-
-def _get_first_arg(items) -> str | bytes:
-    for item in items:
-        if isinstance(item, (str, bytes)):
-            return item
-    return ''
 
 
 class CacheFile(DataFile):
@@ -22,8 +15,8 @@ class CacheFile(DataFile):
         filename (str): This can be ignored.
         enable (bool): Manually enable cache.
         no_name (bool): If set, The filename will be generated automatically.
-        header (bytes | str): For generating filename.
-        read_args (list[int | str]): For generating filename.
+        header (bytes): For generating filename.
+        read_args (Sequence[int | str]): For generating filename.
 
     Notes:
         Use header + (args or kwargs)[read_args[i]] as HMAC input.
@@ -45,34 +38,38 @@ class CacheFile(DataFile):
     filename: Filename = '.no-init'
     enable: bool = True
     no_name: bool = False
-    header: bytes | str = ''
-    read_args: list[int | str] = []
+    header: bytes = b''
+    read_args: Sequence[int | str] = []
 
     # noinspection PyNestedDecorators
     @model_validator(mode='before')
     @classmethod
     def __init_enable_state(cls, data: dict[str, ...]) -> dict[str, ...]:
         if isinstance(data, dict) and data.get('enable', None) is None:
-            from ..config.bot import bot_config
             data['enable'] = bot_config.file.cache.enable
+        return data
+
+    # noinspection PyNestedDecorators
+    @field_validator('header', mode='before')
+    @classmethod
+    def __parse_header(cls, data: bytes | str) -> bytes:
+        if isinstance(data, str):
+            return data.encode()
         return data
 
     def _exec_pre(self, *args, **kwargs):
         if self.no_name:
-            tmp_msg_list = [self.header]
+            hmac = hmac_new(self.header)
             for arg_i in self.read_args:
                 try:
                     if isinstance(arg_i, int) and isinstance((arg := args[arg_i]), (bytes, str)):
-                        tmp_msg_list.append(arg)
+                        hmac.update(arg)
                     elif isinstance((arg := kwargs[arg_i]), (bytes, str)):
-                        tmp_msg_list.append(arg)
+                        hmac.update(arg)
                 except LookupError:
                     pass
-            self.filename = hmac_encode(
-                connect_str_or_bytes(*tmp_msg_list, output_type=bytes),
-                return_hex=True
-            )
-            # TODO: Warn or raise error if self.filename is empty.
+            # The filename is never empty, but may be duplicated.
+            self.filename = hmac.hexdigest()
 
     def __call__(self, func: Callable):
         return self.executor(self.enable, self.enable)(func)
