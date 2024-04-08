@@ -1,9 +1,8 @@
 """Crypto related config models."""
 import hashlib
-import platform
 
-from ..file import Data
-from ..model import QiModel, field_validator, model_validator
+from ..logger import logger
+from ..model import QiModel, field_validator
 
 
 class HashConfigModel(QiModel):
@@ -15,6 +14,7 @@ class HashConfigModel(QiModel):
     @classmethod
     def __check_algorithm(cls, data: str) -> str:
         if data not in hashlib.algorithms_available:
+            logger.warning(f'{data} not available, use sha3_512 instead.')
             data = 'sha3_512'
         return data
 
@@ -37,18 +37,3 @@ class CryptoConfigModel(QiModel):
     """Model for crypto related config."""
     hash: HashConfigModel = HashConfigModel()
     hmac: HmacConfigModel = HmacConfigModel()
-
-    @model_validator(mode='after')
-    def __generate_hmac_key(self) -> 'CryptoConfigModel':
-        if not self.hmac.key:
-            self.hmac.key = Data(
-                filename='hash_key', suffix='bin', is_bin=True
-            ).executor(
-                read=self.hmac.save_key, write=self.hmac.save_key
-            )(
-                lambda header: hashlib.new(
-                    self.hash.algorithm,
-                    f'{header}, {platform.node()}, {platform.processor()}'.encode()
-                ).digest()
-            )('Qi-Bot')
-        return self

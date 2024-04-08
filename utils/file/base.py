@@ -1,6 +1,5 @@
 """Base file (Common file, config, data) manager."""
 from functools import wraps, cached_property
-from io import IOBase
 from pathlib import Path
 from typing import Callable, TypeVar, ParamSpec
 
@@ -57,7 +56,7 @@ class CommonFile(QiModel):
         return '.' + data
 
     def __str__(self) -> str:
-        return str(self.path)
+        return self.path.as_posix()
 
     @cached_property
     def path(self) -> Path:
@@ -91,10 +90,6 @@ class CommonFile(QiModel):
     def delete(self):
         """Delete the file."""
         self.path.unlink(True)
-
-    def open(self) -> IOBase:
-        """Legacy open file method."""
-        return self.open()
 
 
 class DataFile(CommonFile):

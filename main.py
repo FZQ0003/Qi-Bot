@@ -8,7 +8,7 @@ from creart import create
 from graia.saya import Saya
 
 # Import internal utilities
-from utils.config import bot_config
+from utils.config import bot_config, init_config
 from utils.config.avilla import AvillaConsoleConfigModel
 from utils.logger import logger
 from utils.module import get_modules
@@ -23,6 +23,7 @@ def main():
     saya = create(Saya)
     app = Avilla()
 
+    init_config()
     if bot_config.dry_run:
         # For development
         AvillaConsoleConfigModel().configure(app)
