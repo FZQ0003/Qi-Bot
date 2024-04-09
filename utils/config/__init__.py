@@ -9,9 +9,9 @@ def init_config():
     """Init bot_config later to avoid partially import error."""
     global bot_config
 
-    import hashlib
     import platform
 
+    from ..crypto import hash_new
     from ..file import DefaultConfig, Data
     from ..logger import logger
 
@@ -25,18 +25,16 @@ def init_config():
             bot_config = _config_file_example.read(BotConfigModel)
         else:
             logger.warning(f'Example config file {_config_file_example} not found!')
-            bot_config = BotConfigModel()
         _config_file.write(bot_config)
 
     # HMAC key
     if not bot_config.crypto.hmac.key:
         bot_config.crypto.hmac.key = Data(
-            filename='hash_key', suffix='bin', is_bin=True
+            filename='hash_key', suffix='bin', is_bin=True, mode=0o600
         ).executor(
             read=bot_config.crypto.hmac.save_key, write=bot_config.crypto.hmac.save_key
         )(
-            lambda header: hashlib.new(
-                bot_config.crypto.hash.algorithm,
-                f'{header}, {platform.node()}, {platform.processor()}'.encode()
+            lambda header: hash_new(
+                f'{header}, {platform.node()}, {platform.processor()}'
             ).digest()
         )('Qi-Bot')

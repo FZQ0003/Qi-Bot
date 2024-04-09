@@ -9,6 +9,7 @@ from pydantic_core import Url
 IDAccount = Annotated[int, annotated_types.Ge(0)]
 QQAccount = Annotated[int, annotated_types.Ge(10000), annotated_types.Le(9999999999)]
 Port = Annotated[int, annotated_types.Ge(1), annotated_types.Le(65535)]
+Filemode = Annotated[int, annotated_types.Ge(0), annotated_types.Le(0o777)]
 
 # Patterns
 # __pattern_host = r'(xn--[a-zA-Z\d]+|[+\w~]+)(.(xn--[a-zA-Z\d]+|[+\w~]+))*'

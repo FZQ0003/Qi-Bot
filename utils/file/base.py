@@ -1,11 +1,11 @@
-"""Base file (Common file, config, data) manager."""
+"""Base file (common file, config, data) manager."""
 from functools import wraps, cached_property
 from pathlib import Path
 from typing import Callable, TypeVar, ParamSpec
 
 from .error import DataCheckError
 from ..model import QiModel, field_validator, ConfigDict
-from ..model.types import Filename
+from ..model.types import Filename, Filemode
 
 T = TypeVar('T')
 P = ParamSpec('P')
@@ -29,12 +29,10 @@ class CommonFile(QiModel):
         category (str): File category. (e.g. "image")
         suffix (str): File suffix. (e.g. ".png")
         is_bin (bool): Whether the file is binary file.
+        mode (int): File mode (maybe useful for security).
 
     Notes:
         Output path: "prefix/category/filename.suffix" (relative).
-
-        If base is an object (not str or bytes), The class will use pickle + hmac
-        to unpickle data.
 
         The class is NOT editable.
     """
@@ -43,6 +41,7 @@ class CommonFile(QiModel):
     category: str = ''
     suffix: str = ''
     is_bin: bool = True
+    mode: Filemode = 0o644
 
     # Readonly
     model_config = ConfigDict(frozen=True)
@@ -81,6 +80,7 @@ class CommonFile(QiModel):
         """White bytes or string to the file."""
         if not self.path.parent.is_dir():
             self.path.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+        self.path.touch(mode=self.mode, exist_ok=True)
         if self.is_bin:
             return self.path.write_bytes(data)
         else:

@@ -22,8 +22,8 @@ def main():
     # Init
     saya = create(Saya)
     app = Avilla()
-
     init_config()
+
     if bot_config.dry_run:
         # For development
         AvillaConsoleConfigModel().configure(app)
