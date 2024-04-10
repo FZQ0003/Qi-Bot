@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Callable, TypeVar, ParamSpec
 
 from .error import DataCheckError
-from ..model import QiModel, field_validator, ConfigDict
+from ..model import QiModel, field_validator
 from ..model.types import Filename, Filemode
 
 T = TypeVar('T')
@@ -34,7 +34,7 @@ class CommonFile(QiModel):
     Notes:
         Output path: "prefix/category/filename.suffix" (relative).
 
-        The class is NOT editable.
+        It is NOT recommended to edit attributes after initialized.
     """
     filename: Filename
     prefix: str = ''
@@ -43,8 +43,8 @@ class CommonFile(QiModel):
     is_bin: bool = True
     mode: Filemode = 0o644
 
-    # Readonly
-    model_config = ConfigDict(frozen=True)
+    # Readonly (can cause issues for CacheFile)
+    # model_config = ConfigDict(frozen=True)
 
     # noinspection PyNestedDecorators
     @field_validator('suffix')
