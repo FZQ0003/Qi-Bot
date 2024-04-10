@@ -8,13 +8,13 @@ from creart import create
 from graia.saya import Saya
 
 # Import internal utilities
-from utils.config import bot_config, init_config
+from utils.config import load_config
 from utils.config.avilla import AvillaConsoleConfigModel
 from utils.logger import logger
 from utils.module import get_modules
 
 # TODO: Web (FastAPI)
-bot_config.server.enable = False
+# bot_config.server.enable = False
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     # Init
     saya = create(Saya)
     app = Avilla()
-    init_config()
+    bot_config = load_config()
 
     if bot_config.dry_run:
         # For development

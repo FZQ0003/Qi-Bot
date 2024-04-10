@@ -2,11 +2,15 @@
 from .bot import BotConfigModel
 
 bot_config = BotConfigModel()
-"""The bot config must be initialized using init_config()."""
+"""The bot config must be initialized using load_config()."""
 
 
-def init_config():
-    """Init bot_config later to avoid partially import error."""
+def load_config(path: str = '') -> BotConfigModel:
+    """Load and update bot_config.
+
+    Notes:
+        Editing returned config will NOT be saved!
+    """
     global bot_config
 
     import platform
@@ -16,7 +20,7 @@ def init_config():
     from ..logger import logger
 
     # Config file
-    if (_config_file := DefaultConfig(filename='bot')).exists:
+    if (_config_file := DefaultConfig.from_path(path) if path else DefaultConfig(filename='bot')).exists:
         bot_config = _config_file.read(BotConfigModel)
     else:
         logger.warning('Generating config file...')
@@ -38,3 +42,6 @@ def init_config():
                 f'{header}, {platform.node()}, {platform.processor()}'
             ).digest()
         )('Qi-Bot')
+
+    # Return
+    return bot_config

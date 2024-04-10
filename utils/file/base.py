@@ -54,6 +54,23 @@ class CommonFile(QiModel):
             return data
         return '.' + data
 
+    @classmethod
+    def from_path(cls, path: Path | str, **kwargs) -> 'CommonFile':
+        """Init from a path-like string.
+
+        Notes:
+            Some attributes (prefix, category, filename and suffix) will be redefined.
+        """
+        if isinstance(path, str):
+            path = Path(path)
+        return cls(
+            filename=path.stem,
+            prefix=path.parent.as_posix(),
+            category='',
+            suffix=path.suffix,
+            **kwargs
+        )
+
     def __str__(self) -> str:
         return self.path.as_posix()
 
@@ -126,6 +143,8 @@ class DataFile(CommonFile):
 
         Notes:
             You may implement _exec_pre() and _exec_post() when extending the class.
+
+            Known issue: Type checking may not be passed. Use #noqa to avoid this.
         """
 
         def __func(func: Callable[P, T]) -> Callable[P, T]:

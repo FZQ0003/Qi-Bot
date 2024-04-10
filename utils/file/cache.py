@@ -1,11 +1,20 @@
 """Cache file manager."""
-from typing import Callable, Sequence
+from typing import Callable, Sequence, TypeVar, ParamSpec
 
 from . import DataFile
 from ..config import bot_config
 from ..crypto import hmac_new
 from ..model import model_validator, field_validator
 from ..model.types import Filename
+
+T = TypeVar('T')
+P = ParamSpec('P')
+ConfigValue = ...
+
+__all__ = [
+    'CacheFile',
+    'Cache'
+]
 
 
 class CacheFile(DataFile):
@@ -23,7 +32,7 @@ class CacheFile(DataFile):
 
         The "read_args" attribute MUST be correctly set. For example::
 
-            @Cachefile(no_name=True, header='Header', read_args=['arg_2', 1])
+            @Cachefile(no_name=True, header=b'Header', read_args=['arg_2', 1])
             def function(arg_0: int, arg_1: str, arg_2: str, ...) -> ...:
                 ...
 
@@ -34,9 +43,11 @@ class CacheFile(DataFile):
         You must ensure types of ``args[1]`` and ``kwargs['arg_2']`` are all str or bytes.
         In this example, it is recommended to set ``read_args=[2, 'arg_2', 1, 'arg_1']``
         and NOT to set default values to parse both arg_1 and arg_2. NOTE THE ORDER.
+
+        Known issue: Type checking may not be passed. Use #noqa to avoid this.
     """
     filename: Filename = '.no-init'
-    enable: bool = True
+    enable: bool = ConfigValue
     no_name: bool = False
     header: bytes = b''
     read_args: Sequence[int | str] = []
@@ -58,8 +69,10 @@ class CacheFile(DataFile):
         return data
 
     def _exec_pre(self, *args, **kwargs):
+        # Generate filename
         if self.no_name:
             hmac = hmac_new(self.header)
+            # See docstring.
             for arg_i in self.read_args:
                 try:
                     if isinstance(arg_i, int) and isinstance((arg := args[arg_i]), (bytes, str)):
@@ -71,7 +84,7 @@ class CacheFile(DataFile):
             # The filename is never empty, but may be duplicated.
             self.filename = hmac.hexdigest()
 
-    def __call__(self, func: Callable):
+    def __call__(self, func: Callable[P, T]) -> Callable[P, T]:
         return self.executor(self.enable, self.enable)(func)
 
 

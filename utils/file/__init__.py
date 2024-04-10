@@ -2,7 +2,7 @@
 # DO NOT CHANGE THE ORDER!
 from .error import DataCheckError, _import_warning
 from .base import CommonFile, DataFile, ConfigFile, Data, Config
-from .cache import Cache
+from .cache import CacheFile, Cache
 from .json import JsonMixin, JsonConfig, JsonData
 
 # yaml
