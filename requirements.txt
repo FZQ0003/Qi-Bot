@@ -1,12 +1,18 @@
-graia-ariadne[graia] ~= 0.6.17, < 0.7
-arclet-alconna ~= 0.9.3.4, < 0.9.4
-arclet-alconna-graia ~= 0.0.12, < 0.0.13
-pyyaml >= 6.0
+# graia-ariadne[graia] ~= 0.6.17, < 0.7
+# arclet-alconna ~= 0.9.3.4, < 0.9.4
+# arclet-alconna-graia ~= 0.0.12, < 0.0.13
 # pyttsx3 >= 2.90
 # pypiwin32; sys_platform == 'win32'
-pysilk-mod >= 1.6.0
-aliyun-python-sdk-core >= 2.13.36
+# aliyun-python-sdk-core >= 2.13.36
 # pillow >= 9.0.1
-numpy >= 1.23.1
-fastapi ~= 0.79.0
-uvicorn[standard] ~= 0.18.2
+# numpy >= 1.23.1
+# fastapi ~= 0.79.0
+# uvicorn[standard] ~= 0.18.2
+
+# avilla-core >= 1.0.0a24
+# avilla-console >= 0.2.0
+avilla-workspace @ git+https://github.com/GraiaProject/Avilla.git
+arclet-alconna-graia-workspace @ git+https://github.com/ArcletProject/Alconna-Graia.git
+PyYAML >= 6.0
+# soundfile >= 0.12.1
+# graiax-silkcoder [libsndfile] >= 0.3.6

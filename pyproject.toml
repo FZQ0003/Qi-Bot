@@ -1,0 +1,30 @@
+[project]
+name = "Qi-Bot"
+version = "0.0.0-avilla"
+description = "An interactive bot, powered by Graia Framework."
+authors = [
+    { name = "FZQ0003", email = "468403876@qq.com" },
+]
+dependencies = [
+#    "avilla-core>=1.0.0a24",
+#    "avilla-console>=0.2.0",
+    "avilla-workspace @ git+https://github.com/GraiaProject/Avilla.git",
+    "arclet-alconna-graia-workspace @ git+https://github.com/ArcletProject/Alconna-Graia.git",
+    "PyYAML>=6.0",
+#    "soundfile>=0.12.1",
+#    "graiax-silkcoder[libsndfile]>=0.3.6",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=8.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
