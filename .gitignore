@@ -1,15 +1,19 @@
 # Project files
 .idea/
+.vscode/
 
 # Venv
+.venv/
+venv/
 __pypackages__/
 graia-ariadne/
 graia-avilla/
-venv/
 
 # PDM
 .pdm-python
+.pdm.toml
 pdm.lock
+pdm.toml
 
 # Archive
 archive/
@@ -26,7 +30,6 @@ tmp/
 
 # Tests
 modules/test_*
-tests/
 
 # Config
 config/*.json
