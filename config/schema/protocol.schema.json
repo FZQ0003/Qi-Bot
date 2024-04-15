@@ -15,14 +15,14 @@
     "anyOf": [
       {
         "properties": {
-          "id": {
+          "protocol": {
             "const": "console"
           }
         }
       },
       {
         "properties": {
-          "id": {
+          "protocol": {
             "const": "mirai_api_http"
           },
           "host": {

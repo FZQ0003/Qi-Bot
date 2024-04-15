@@ -2,9 +2,9 @@ $schema: './schema/bot.schema.json' # Not implemented yet.
 dry_run: False
 modules: '*'
 protocols:
-  - id: 'console'
+  - protocol: 'console'
 #  -
-#    id: 'mirai_api_http'
+#    protocol: 'mirai_api_http'
 #    host: 'localhost'
 #    port: 8080
 #    account: 1234567890

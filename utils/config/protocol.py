@@ -3,7 +3,7 @@
 from typing import TypeVar, Literal
 
 from ..logger import logger
-from ..model import QiModel, Field, field_validator, model_validator, ValidationError
+from ..model import QiModel, field_validator, model_validator, ValidationError
 from ..model.types import Host, Port, QQAccount
 
 App = TypeVar('App')
@@ -29,7 +29,7 @@ class MiraiHttpConfigModel(ProtocolConfigModel):
     host: Host
     port: Port
     account: list[QQAccount]
-    access_token: str = Field('ServiceVerifyKey', alias='verify_key')
+    access_token: str = 'ServiceVerifyKey'
 
     @property
     def url(self) -> str:
