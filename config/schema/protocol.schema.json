@@ -7,11 +7,76 @@
       "type": "integer",
       "minimum": 10000,
       "maximum": 9999999999
+    },
+    "web": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "description": "Web API 通信方式",
+          "enum": [
+            "http",
+            "webhook",
+            "ws",
+            "ws-reverse"
+          ],
+          "default": "ws"
+        },
+        "access_token": {
+          "description": "Web API 访问令牌",
+          "type": "string",
+          "default": "ServiceVerifyKey"
+        },
+        "url": {
+          "description": "Web API 服务运行的地址",
+          "type": "string",
+          "format": "uri",
+          "default": "localhost"
+        },
+        "host": {
+          "description": "Web API 服务运行的主机名/IP",
+          "type": "string",
+          "pattern": "^(xn--[a-zA-Z\\d]+|[+\\w~]+)(.(xn--[a-zA-Z\\d]+|[+\\w~]+))*$",
+          "default": "localhost"
+        },
+        "port": {
+          "description": "Web API 服务运行的端口",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "path": {
+          "description": "Web API 资源路径",
+          "type": "string",
+          "default": "/"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "url"
+          ]
+        },
+        {
+          "required": [
+            "host",
+            "port"
+          ]
+        }
+      ]
     }
   },
   "type": "array",
   "items": {
     "type": "object",
+    "properties": {
+      "protocol": {
+        "description": "协议名称"
+      }
+    },
+    "required": [
+      "protocol"
+    ],
     "anyOf": [
       {
         "properties": {
@@ -21,22 +86,10 @@
         }
       },
       {
+        "$ref": "#/$defs/web",
         "properties": {
           "protocol": {
-            "const": "mirai_api_http"
-          },
-          "host": {
-            "description": "HTTP API 服务运行的地址",
-            "type": "string",
-            "pattern": "^(xn--[a-zA-Z\\d]+|[+\\w~]+)(.(xn--[a-zA-Z\\d]+|[+\\w~]+))*$",
-            "default": "localhost"
-          },
-          "port": {
-            "description": "HTTP API 服务运行的端口",
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 65535,
-            "default": 8080
+            "const": "mirai-api-http"
           },
           "account": {
             "description": "机器人 QQ",
@@ -53,18 +106,17 @@
               }
             ],
             "default": 1234567890
-          },
-          "access_token": {
-            "description": "HTTP API verifyKey",
-            "type": "string",
-            "default": "ServiceVerifyKey"
           }
         },
-        "required": [
-          "host",
-          "port",
-          "account"
-        ]
+        "required": ["account"]
+      },
+      {
+        "$ref": "#/$defs/web",
+        "properties": {
+          "protocol": {
+            "const": "onebot-11"
+          }
+        }
       }
     ]
   }

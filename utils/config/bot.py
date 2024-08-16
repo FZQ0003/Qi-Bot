@@ -1,4 +1,6 @@
 """Qi-Bot config model."""
+from typing_extensions import Self
+
 from .crypto import CryptoConfigModel
 from .file import FileConfigModel
 from .protocol import ProtocolTypes
@@ -30,7 +32,7 @@ class BotConfigModel(QiModel):
         return data
 
     @model_validator(mode='after')
-    def __check_protocol(self) -> 'BotConfigModel':
+    def __check_protocol(self) -> Self:
         """Check protocol config for bot."""
         self.dry_run = len(self.protocols) < 1
         return self

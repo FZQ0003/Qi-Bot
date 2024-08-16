@@ -3,11 +3,14 @@ dry_run: False
 modules: '*'
 protocols:
   - protocol: 'console'
-#  -
-#    protocol: 'mirai_api_http'
+#  - protocol: 'mirai-api-http'
 #    host: 'localhost'
 #    port: 8080
 #    account: 1234567890
+#    access_token: 'ServiceVerifyKey'
+#  - protocol: 'onebot-11'
+#    adapter: 'ws'
+#    url: 'ws://localhost:8081'
 #    access_token: 'ServiceVerifyKey'
 file:
   cache:

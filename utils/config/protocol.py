@@ -1,10 +1,12 @@
 """Protocol config models."""
 # from urllib.request import urlopen
 from typing import TypeVar, Literal
+from urllib.parse import urlparse
 
+from typing_extensions import Self
 from ..logger import logger
-from ..model import QiModel, field_validator, model_validator, ValidationError
-from ..model.types import Host, Port, QQAccount
+from ..model import QiModel, model_validator
+from ..model.types import Host, Port
 
 App = TypeVar('App')
 
@@ -23,51 +25,44 @@ class ProtocolConfigModel(QiModel):
                        f'neither recognized nor implemented!')
 
 
-class MiraiHttpConfigModel(ProtocolConfigModel):
-    """Model for Mirai HTTP API config."""
-    # protocol: Literal['mirai_api_http']
-    host: Host
-    port: Port
-    account: list[QQAccount]
+class WebConfigModel(ProtocolConfigModel):
+    """Model for Web-based API config."""
+    adapter: Literal['http', 'webhook', 'ws', 'ws-reverse'] = 'ws'
+    host: Host = 'localhost'
+    port: Port = 8080
+    path: str = '/'
     access_token: str = 'ServiceVerifyKey'
-
-    @property
-    def url(self) -> str:
-        return f'http://{self.host}:{self.port}'
+    url: str = ''
 
     # noinspection PyNestedDecorators
     @model_validator(mode='before')
     @classmethod
     def __parse_url(cls, data: dict[str, ...]) -> dict[str, ...]:
-        """Parse url into host and port if host is url."""
-        if not isinstance(data, dict):
-            return data
-        host = data.get('host', 'localhost')
-        if len((schema_split := host.split('://'))) > 1:
-            if (schema := schema_split[0]) not in ['http']:  # ws?
-                raise ValidationError(f'URL schema {schema} not supported.')
-            host = schema_split[1]
-        if len((port_split := host.split(':'))) > 1:
-            host = port_split[0]
-            try:
-                data['port'] = int(port_split[-1].split('/')[0])
-            except ValueError:
-                data['port'] = data.get('port', 8080)
-        data['host'] = host
+        """Parse url into host and port if url is set."""
+        if isinstance(data, dict) and (url := data.get('url', '')):
+            parse = urlparse(url)
+            data_new = {
+                'adapter': parse.scheme,
+                'host': parse.hostname,
+                'port': parse.port,
+                'path': parse.path
+            }
+            for key, value in data_new.items():
+                if value and key not in data:
+                    data[key] = value
         return data
 
-    # noinspection PyNestedDecorators
-    @field_validator('account', mode='before')
-    @classmethod
-    def __parse_account(cls, data: int | list[int]) -> list[int]:
-        """Parse single account into list."""
-        if isinstance(data, int):
-            data = [data]
-        return data
+    @model_validator(mode='after')
+    def __set_url(self) -> Self:
+        if not self.path.startswith('/'):
+            self.path = '/' + self.path
+        protocol = 'ws' if 'ws' in self.adapter else 'http'
+        self.url = f'{protocol}://{self.host}:{self.port}{self.path}'
+        return self
 
     # Let the bot framework check!
     # @model_validator(mode='after')
-    # def __test_url(self) -> 'MiraiHttpConfigModel':
+    # def __test_url(self) -> Self:
     #     """Check whether 'http://host:port' is valid."""
     #     code = urlopen(f'http://{self.host}:{self.port}/about').getcode()
     #     if code == 200:
@@ -75,9 +70,13 @@ class MiraiHttpConfigModel(ProtocolConfigModel):
     #     raise ConnectionError(f'URL: {self.host}:{self.port} returned code {code}.')
 
 
-ProtocolTypes = ProtocolConfigModel | MiraiHttpConfigModel
+ProtocolTypes = WebConfigModel | ProtocolConfigModel
 try:
-    from .avilla import AvillaConsoleConfigModel, AvillaElizabethConfigModel
-    ProtocolTypes = AvillaConsoleConfigModel | AvillaElizabethConfigModel | ProtocolTypes
+    from .avilla import *
+
+    ProtocolTypes = (AvillaConsoleConfigModel |
+                     AvillaElizabethConfigModel |
+                     AvillaOnebot11ConfigModel |
+                     ProtocolTypes)
 except ImportError:
     ...
