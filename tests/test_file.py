@@ -1,5 +1,6 @@
 import secrets
 
+from fake_data import fake_filename, fake_suffix
 from utils.file import CommonFile, JsonData
 from utils.model import QiModel
 
@@ -29,10 +30,10 @@ class TestFile:
 
     def test_path(self):
         file = SampleTempFile(
-            filename='foo.bar',
-            suffix='.sample'
+            filename=fake_filename(),
+            suffix=fake_suffix()
         )
-        # tmp/test/foo.bar.sample
+        # tmp/test/{filename}{suffix}
         path_str = f'{file.prefix}/{file.category}/{file.filename}{file.suffix}'
         file_2 = SampleTempFile.from_path(path_str)
         assert file.path.as_posix() == path_str
@@ -41,8 +42,8 @@ class TestFile:
     def test_io(self):
         data = secrets.token_bytes()
         file = SampleTempFile(
-            filename='io',
-            suffix='.bin',
+            filename=fake_filename(),
+            suffix=fake_suffix(),
             is_bin=True
         )
         file.write(data)
