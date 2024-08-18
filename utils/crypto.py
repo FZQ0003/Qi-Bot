@@ -2,19 +2,19 @@
 import hashlib
 import hmac
 
-from .config import bot_config
+from .stored_data import current
 
 
 def hash_new(data: bytes | str = b''):
     if isinstance(data, str):
         data = data.encode()
-    return hashlib.new(bot_config.crypto.hash.algorithm, data)
+    return hashlib.new(current.bot_config.crypto.hash.algorithm, data)
 
 
 def hmac_new(data: bytes | str = b''):
     if isinstance(data, str):
         data = data.encode()
-    return hmac.new(bot_config.crypto.hmac.key, data, bot_config.crypto.hash.algorithm)
+    return hmac.new(current.bot_config.crypto.hmac.key, data, current.bot_config.crypto.hash.algorithm)
 
 
 def hash_encode(data: bytes | str, return_hex: bool = True) -> bytes | str:

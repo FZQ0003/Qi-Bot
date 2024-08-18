@@ -1,6 +1,6 @@
 import secrets
 
-from utils.config import bot_config
+from utils.stored_data import current
 from utils.file import CacheFile
 
 
@@ -26,6 +26,7 @@ class TestCache:
         assert output == self.sample_func(arg_1, secrets.token_bytes())  # noqa
 
     def test_cache_config(self):
+        bot_config = current.bot_config
         assert SampleCache().enable == bot_config.file.cache.enable
         bot_config.file.cache.enable = not bot_config.file.cache.enable
         assert SampleCache().enable == bot_config.file.cache.enable

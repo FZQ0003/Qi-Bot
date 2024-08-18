@@ -8,10 +8,11 @@ from creart import create
 from graia.saya import Saya
 
 # Import internal utilities
+import utils.avilla  # noqa: F401
 from utils.config import load_config
-from utils.config.avilla import AvillaConsoleConfigModel
 from utils.logger import logger
 from utils.module import get_modules
+
 
 # TODO: Web (FastAPI)
 # bot_config.server.enable = False
@@ -24,9 +25,11 @@ def main():
     app = Avilla()
     bot_config = load_config()
 
+    # Configure protocols
     if bot_config.dry_run:
         # For development
-        AvillaConsoleConfigModel().configure(app)
+        from avilla.console.protocol import ConsoleProtocol
+        app.apply_protocols(ConsoleProtocol())
     else:
         for protocol_config in bot_config.protocols:
             protocol_config.configure(app)
@@ -34,7 +37,7 @@ def main():
     # TODO: Web
 
     # Load modules
-    with saya.module_context():  # noqa
+    with saya.module_context():
         if (modules := bot_config.modules) is None:
             logger.info('Automatically loading modules...')
             modules = get_modules()

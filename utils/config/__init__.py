@@ -1,20 +1,24 @@
 """Qi-Bot config."""
-from .bot import BotConfigModel
+from typing import TYPE_CHECKING
 
-bot_config = BotConfigModel()
-"""The bot config must be initialized using load_config()."""
+if TYPE_CHECKING:
+    from .bot import BotConfigModel
+#
+# bot_config: 'BotConfigModel'
+# """The bot config must be initialized using load_config()."""
+
+from ..stored_data import current
 
 
-def load_config(path: str = '') -> BotConfigModel:
+def load_config(path: str = '') -> 'BotConfigModel':
     """Load and update bot_config.
 
     Notes:
         Editing returned config will NOT be saved!
     """
-    global bot_config
-
     import platform
 
+    from .bot import BotConfigModel
     from ..crypto import hash_new
     from ..file import DefaultConfig, Data
     from ..logger import logger
@@ -29,6 +33,7 @@ def load_config(path: str = '') -> BotConfigModel:
             bot_config = _config_file_example.read(BotConfigModel)
         else:
             logger.warning(f'Example config file {_config_file_example} not found!')
+            bot_config = BotConfigModel()
         _config_file.write(bot_config)
 
     # HMAC key
@@ -44,4 +49,5 @@ def load_config(path: str = '') -> BotConfigModel:
         )('Qi-Bot')
 
     # Return
+    current.bot_config = bot_config
     return bot_config

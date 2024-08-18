@@ -2,10 +2,10 @@
 from typing import Callable, Sequence, TypeVar, ParamSpec
 
 from .base import DataFile
-from ..config import bot_config
 from ..crypto import hmac_new
 from ..model import model_validator, field_validator
 from ..model.types import Filename
+from ..stored_data import current
 
 T = TypeVar('T')
 P = ParamSpec('P')
@@ -57,7 +57,7 @@ class CacheFile(DataFile):
     @classmethod
     def __init_enable_state(cls, data: dict[str, ...]) -> dict[str, ...]:
         if isinstance(data, dict) and data.get('enable', None) is None:
-            data['enable'] = bot_config.file.cache.enable
+            data['enable'] = current.bot_config.file.cache.enable
         return data
 
     # noinspection PyNestedDecorators

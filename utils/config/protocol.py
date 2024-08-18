@@ -1,6 +1,5 @@
 """Protocol config models."""
-# from urllib.request import urlopen
-from typing import TypeVar, Literal
+from typing import TypeVar, Literal, Union
 from urllib.parse import urlparse
 
 from typing_extensions import Self
@@ -8,14 +7,17 @@ from ..logger import logger
 from ..model import QiModel, model_validator
 from ..model.types import Host, Port
 
+# from urllib.request import urlopen
+
 App = TypeVar('App')
+Protocol = TypeVar('Protocol')
 
 
 class ProtocolConfigModel(QiModel):
     """Model for custom protocol config."""
     protocol: Literal[''] | str = ''
 
-    def configure(self, app: App) -> None:
+    def configure(self, app: App = ..., protocol: Protocol = ...) -> None:
         """Activate configuration.
 
         Notes:
@@ -54,6 +56,7 @@ class WebConfigModel(ProtocolConfigModel):
 
     @model_validator(mode='after')
     def __set_url(self) -> Self:
+        """Parse protocol, host, port and path into url."""
         if not self.path.startswith('/'):
             self.path = '/' + self.path
         protocol = 'ws' if 'ws' in self.adapter else 'http'
@@ -63,20 +66,22 @@ class WebConfigModel(ProtocolConfigModel):
     # Let the bot framework check!
     # @model_validator(mode='after')
     # def __test_url(self) -> Self:
-    #     """Check whether 'http://host:port' is valid."""
-    #     code = urlopen(f'http://{self.host}:{self.port}/about').getcode()
+    #     """Check whether self.url is valid."""
+    #     code = urlopen(self.url).getcode()
     #     if code == 200:
     #         return self
-    #     raise ConnectionError(f'URL: {self.host}:{self.port} returned code {code}.')
+    #     raise ConnectionError(f'URL: {self.url} returned code {code}.')
 
 
-ProtocolTypes = WebConfigModel | ProtocolConfigModel
-try:
-    from .avilla import *
+ProtocolTypes: type[Union] = WebConfigModel | ProtocolConfigModel
+__model_priority = {
+    WebConfigModel: -50,
+    ProtocolConfigModel: -100
+}
 
-    ProtocolTypes = (AvillaConsoleConfigModel |
-                     AvillaElizabethConfigModel |
-                     AvillaOnebot11ConfigModel |
-                     ProtocolTypes)
-except ImportError:
-    ...
+
+def update_protocol_types(priority: dict[type[ProtocolConfigModel], int]) -> None:
+    global __model_priority, ProtocolTypes
+    __model_priority.update(priority)
+    model_order = sorted(__model_priority.items(), key=lambda _: (-_[1], _[0].__name__))
+    ProtocolTypes = Union[tuple(_[0] for _ in model_order)]

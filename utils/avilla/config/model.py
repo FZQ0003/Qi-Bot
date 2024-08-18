@@ -1,11 +1,11 @@
 """Avilla (protocol) config models."""
 from typing import Literal
 
-from avilla.core import Avilla
+from avilla.core import Avilla, BaseProtocol
 
-from .protocol import ProtocolConfigModel, WebConfigModel
-from ..model import field_validator
-from ..model.types import QQAccount
+from utils.config.protocol import ProtocolConfigModel, WebConfigModel, update_protocol_types
+from utils.model import field_validator
+from utils.model.types import QQAccount
 
 __all__ = [
     'AvillaConsoleConfigModel',
@@ -14,16 +14,26 @@ __all__ = [
 ]
 
 
-class AvillaConsoleConfigModel(ProtocolConfigModel):
+class AvillaBaseConfigModel(ProtocolConfigModel):
+    def configure(self, app: Avilla = ..., protocol: BaseProtocol = ...) -> None:
+        if app is ... or protocol is ...:
+            super().configure()
+        else:
+            app.apply_protocols(protocol)
+
+
+class AvillaConsoleConfigModel(AvillaBaseConfigModel):
     """Model for Avilla Console config."""
     protocol: Literal['console'] = 'console'
 
-    def configure(self, app: Avilla) -> None:
+    def configure(self, app: Avilla = ..., protocol: BaseProtocol = ...) -> None:
         from avilla.console.protocol import ConsoleProtocol
-        app.apply_protocols(ConsoleProtocol())
+        if protocol is ...:
+            protocol = ConsoleProtocol()
+        super().configure(app, protocol)
 
 
-class AvillaElizabethConfigModel(WebConfigModel):
+class AvillaElizabethConfigModel(AvillaBaseConfigModel, WebConfigModel):
     """Model for Avilla Elizabeth (mirai-api-http) config."""
     protocol: Literal['mirai-api-http', 'elizabeth'] = 'mirai-api-http'
     adapter: Literal['ws'] = 'ws'
@@ -38,9 +48,11 @@ class AvillaElizabethConfigModel(WebConfigModel):
             data = [data]
         return data
 
-    def configure(self, app: Avilla) -> None:
+    def configure(self, app: Avilla = ..., protocol: BaseProtocol = ...) -> None:
         from avilla.elizabeth.protocol import ElizabethProtocol, ElizabethConfig
-        app.apply_protocols(protocol := ElizabethProtocol())
+        if protocol is ...:
+            protocol = ElizabethProtocol()
+        super().configure(app, protocol)
         # I don't know why it's designed like that...
         # I can manage multiple accounts in ONE Mirai session!
         for account in self.account:
@@ -52,15 +64,17 @@ class AvillaElizabethConfigModel(WebConfigModel):
             ))
 
 
-class AvillaOnebot11ConfigModel(WebConfigModel):
+class AvillaOnebot11ConfigModel(AvillaBaseConfigModel, WebConfigModel):
     """Model for Avilla Onebot 11 config."""
     protocol: Literal['onebot-11'] = 'onebot-11'
     path: str = '/onebot/v11'
 
-    def configure(self, app: Avilla) -> None:
+    def configure(self, app: Avilla = ..., protocol: BaseProtocol = ...) -> None:
         from yarl import URL
         from avilla.onebot.v11.protocol import OneBot11Protocol, OneBot11ForwardConfig, OneBot11ReverseConfig
-        app.apply_protocols(protocol := OneBot11Protocol())
+        if protocol is ...:
+            protocol = OneBot11Protocol()
+        super().configure(app, protocol)
         if self.adapter == 'ws-reverse':
             protocol.configure(OneBot11ReverseConfig(
                 prefix='/',
@@ -73,3 +87,11 @@ class AvillaOnebot11ConfigModel(WebConfigModel):
                 endpoint=URL(self.url),
                 access_token=self.access_token
             ))
+
+
+update_protocol_types({
+    AvillaBaseConfigModel: -10,
+    AvillaConsoleConfigModel: 0,
+    AvillaElizabethConfigModel: 0,
+    AvillaOnebot11ConfigModel: 0
+})

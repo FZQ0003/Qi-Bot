@@ -31,6 +31,9 @@ file:
 #    secret: 'secret-for-online'
 #    app_key: 'app-key'
 #    extra: 'u-can-add-any-keys-u-like'
+#  languages:
+#    - zh
+#    - cmn
 server:
   enable: False
   port: 5820
