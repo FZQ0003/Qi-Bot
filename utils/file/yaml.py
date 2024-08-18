@@ -1,7 +1,7 @@
 """YAML (third-party) file manager."""
 import yaml
 
-from . import Config, ConfigFile, Data
+from .base import Config, ConfigFile, Data
 from ..model import QiModel
 
 __all__ = [

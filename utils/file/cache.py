@@ -1,7 +1,7 @@
 """Cache file manager."""
 from typing import Callable, Sequence, TypeVar, ParamSpec
 
-from . import DataFile
+from .base import DataFile
 from ..config import bot_config
 from ..crypto import hmac_new
 from ..model import model_validator, field_validator

@@ -1,7 +1,7 @@
 """JSON (built-in) file manager."""
 import json
 
-from . import Config, ConfigFile, Data
+from .base import Config, ConfigFile, Data
 from ..model import QiModel
 
 __all__ = [

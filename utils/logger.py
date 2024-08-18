@@ -1,3 +1,4 @@
+"""Qi-Bot logging utilities (based on loguru)."""
 import logging
 
 from loguru import logger

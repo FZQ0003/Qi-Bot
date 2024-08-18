@@ -1,3 +1,4 @@
+"""Qi-Bot crypto related utilities."""
 import hashlib
 import hmac
 
