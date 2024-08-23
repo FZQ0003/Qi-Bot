@@ -8,11 +8,11 @@ from creart import create
 from graia.saya import Saya
 
 # Import internal utilities
-import utils.avilla  # noqa: F401
+from utils import avilla as _extra  # noqa: F401
+from utils.graia.service import add_available_services
 from utils.config import load_config
 from utils.logger import logger
 from utils.module import get_modules
-
 
 # TODO: Web (FastAPI)
 # bot_config.server.enable = False
@@ -25,7 +25,7 @@ def main():
     app = Avilla()
     bot_config = load_config()
 
-    # Configure protocols
+    # Configure
     if bot_config.dry_run:
         # For development
         from avilla.console.protocol import ConsoleProtocol
@@ -33,6 +33,7 @@ def main():
     else:
         for protocol_config in bot_config.protocols:
             protocol_config.configure(app)
+    add_available_services(app.launch_manager)
 
     # TODO: Web
 
