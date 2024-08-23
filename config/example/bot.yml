@@ -43,3 +43,11 @@ crypto:
   hmac:
     key: ''
     save_key: False
+demo: {}
+#  qq:  # land(qq)
+#    - friend: 114514  # land(qq).friend(114514)
+#    - group: 1919810  # land(qq).group(114514)
+#    - group: 1919810
+#      member: 810893  # land(qq).group(114514).member(810893)
+#    - - group: 1919810
+#      - member: 810893  # same as above

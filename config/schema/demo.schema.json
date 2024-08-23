@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Demo Environment Config",
+  "description": "示例环境配置",
+  "$defs": {
+    "key-id": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": {
+    "description": "该land下设置，格式为有序字典",
+    "type": "array",
+    "items": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/key-id"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/key-id"
+          },
+          "minItems": 1
+        }
+      ]
+    }
+  }
+}

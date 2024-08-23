@@ -39,6 +39,9 @@
     },
     "crypto": {
       "$ref": "crypto.schema.json"
+    },
+    "demo": {
+      "$ref": "demo.schema.json"
     }
   }
 }

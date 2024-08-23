@@ -2,6 +2,7 @@
 from typing_extensions import Self
 
 from .crypto import CryptoConfigModel
+from .demo import DemoConfigModel
 from .file import FileConfigModel
 from .protocol import ProtocolTypes
 from .shell import ShellConfigModel
@@ -21,6 +22,7 @@ class BotConfigModel(QiModel):
     tts: TTSConfigModel = TTSConfigModel()
     server: ServerConfigModel = ServerConfigModel()
     crypto: CryptoConfigModel = CryptoConfigModel()
+    demo: DemoConfigModel = DemoConfigModel()
 
     # noinspection PyNestedDecorators
     @field_validator('modules', mode='before')
