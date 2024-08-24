@@ -36,6 +36,9 @@ def load_config(path: str = '') -> 'BotConfigModel':
             bot_config = BotConfigModel()
         _config_file.write(bot_config)
 
+    # Write to stored data
+    current.bot_config = bot_config
+
     # HMAC key
     if not bot_config.crypto.hmac.key:
         bot_config.crypto.hmac.key = Data(
@@ -49,5 +52,4 @@ def load_config(path: str = '') -> 'BotConfigModel':
         )('Qi-Bot')
 
     # Return
-    current.bot_config = bot_config
     return bot_config
