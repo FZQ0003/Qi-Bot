@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author: F_Qilin
-# Version: 1.2-ariadne
+# Version: 1.3.0-avilla
 # Note: See show_help().
 
-# Envs: ENV_NAME, ENV_DISPLAY, ENV_REQ, ENV_REPOS
+# Envs: ENV_NAME, ENV_DISPLAY, ENV_REQ, ENV_REPOS, ENV_SCRIPT
 # Args: ARG_GLOBAL, ARG_CLEAR
-# Flags: FLAG_NEW, FLAG_REMOVE, FLAG_UPDATE, FLAG_EXIST, FLAG_GIT
-# Vars: PY_DIR
+# Flags: FLAG_NEW, FLAG_REMOVE, FLAG_UPDATE, FLAG_GIT, FLAG_DEBUG, FLAG_DRYRUN, FLAG_AUTO
+# Vars: VAR_PYTHON
 
 ### Functions
 
@@ -17,18 +17,23 @@ show_help() {
   echo
   echo "Options:"
   echo "  -n, --new           Create or reinstall a new virtual environment."
-  echo "      --local         Do not add global site packages."
+  echo "  -g, --global        Add global site packages."
   echo "      --requirement   Use requirements.txt instead of ENV_REQ."
-  echo "      --name name     Directory name instead of ENV_NAME."
-  echo "      --display name  Display name for prompt instead of ENV_DISPLAY."
+  echo "      --name NAME     Directory name instead of ENV_NAME."
+  echo "      --display NAME  Display name for prompt instead of ENV_DISPLAY."
   echo "  -r, --remove        Remove and delete current environment."
   echo "  -u, --update        Update packages of the current environment."
   echo "  -h, --help          Show this help and exit."
   echo "  -v, --version       Show the version and exit."
+  echo "      --auto          Do not ask user"
   echo
   echo "Options for development:"
+  echo "      --debug         Show debug logs."
+  echo "      --dry-run       Do not actually run commands and show debug logs."
   echo "      --use-git       Install core packages from git instead of pypi."
   echo "                      You will need to manually install other packages."
+  echo "      --script FILE   Install from an external script."
+  echo "                      The script will override venv_update()."
   echo
   echo "Environment variables:"
   echo "  ENV_NAME            Directory name (default: $ENV_NAME)."
@@ -36,6 +41,7 @@ show_help() {
   echo "  ENV_REQ             Initial packages (default: $ENV_REQ)."
   echo "  ENV_REPOS           Git repositories of core packages (shell array)."
   echo "                      eg. ('repo1.git' 'repo2.git' ...)"
+  echo "  ENV_SCRIPT          External venv_update script path."
   echo
   echo "This script uses \"python -m venv\" bundled with python3.3+."
   echo "On some Debian-based systems, python3-venv is needed to install."
@@ -47,46 +53,97 @@ show_help() {
 
 # Version
 show_version() {
-  echo "Script version: 1.2-ariadne."
+  echo "Script version: 1.3.0-avilla."
   echo "Written by F_Qilin."
   exit
 }
 
-# Find python and update PY_DIR
+# Echo
+echo_info() { echo "[INFO]    $*"; }
+echo_warn() { echo "[WARNING] $*"; }
+echo_error() { echo "[ERROR]   $*"; }
+echo_debug() {
+  if [ "$FLAG_DEBUG" ]; then
+    if [ -n "$2" ]; then
+      local __prefix="$1: "
+      shift
+    fi
+    echo "[DEBUG]   $__prefix$*"
+  fi
+}
+question() {
+  if [ "$FLAG_AUTO" ]; then
+    echo "          $1: $3 [AUTO]"
+    eval "$2=$3"
+  else
+    read -rp "          $1: " "$2"
+  fi
+}
+
+# Set flag
+flag() {
+  eval "$1=1"
+  echo_debug flag "set $1"
+}
+
+# Run
+run() {
+  if [ "$FLAG_DRYRUN" ]; then
+    echo_debug run "$*"
+  else
+    # shellcheck disable=SC2048
+    $*
+  fi
+}
+
+# Find python and update VAR_PYTHON
 find_python() {
-  PY_DIR=$(find "$ENV_NAME" -regex '.*/python\(\.exe\)+$' 2>/dev/null | head -n +1)
+  VAR_PYTHON=$(find "$ENV_NAME" -regex '.*/python\(\.exe\)?$' 2>/dev/null | head -n +1)
+  echo_debug find_python "VAR_PYTHON=$VAR_PYTHON"
 }
 
 # Install
-# shellcheck disable=SC2086
 venv_init() {
+  echo_debug venv_init "python -m venv \"$ENV_NAME\" $ARG_CLEAR $ARG_GLOBAL --prompt \"$ENV_DISPLAY\""
   # virtualenv: --activators bash --prompt "($ENV_DISPLAY) "
-  python -m venv "$ENV_NAME" $ARG_CLEAR $ARG_GLOBAL --prompt "$ENV_DISPLAY"
-  find_python
+  # shellcheck disable=SC2086
+  run python -m venv "$ENV_NAME" $ARG_CLEAR $ARG_GLOBAL --prompt "$ENV_DISPLAY"
+  if [ "$FLAG_DRYRUN" ]; then
+    VAR_PYTHON="$ENV_NAME/bin/python"
+    echo_debug venv_init "VAR_PYTHON=$VAR_PYTHON"
+  else
+    find_python
+  fi
 }
 
 # Update
-# shellcheck disable=SC2086
 venv_update() {
-  # PY_DIR always has value, no need to check
-  if [ $FLAG_GIT ]; then
+  # VAR_PYTHON always has value, no need to check
+  if [ -n "$ENV_SCRIPT" ]; then
+    # shellcheck disable=SC1090
+    . "$ENV_SCRIPT"
+  elif [ "$FLAG_GIT" ]; then
     for repo in "${ENV_REPOS[@]}"; do
+      echo_debug venv_update "\"$VAR_PYTHON\" -m pip install \"git+$repo\" --force-reinstall"
       # "--force-reinstall" can also reinstall pypi packages.
-      "$PY_DIR" -m pip install "git+$repo" --force-reinstall
+      run "$VAR_PYTHON" -m pip install "git+$repo" --force-reinstall
     done
   else
-    "$PY_DIR" -m pip install $ENV_REQ --upgrade
+    echo_debug venv_update "\"$VAR_PYTHON\" -m pip install $ENV_REQ --upgrade"
+    # shellcheck disable=SC2086
+    run "$VAR_PYTHON" -m pip install $ENV_REQ --upgrade
   fi
 }
 
 # Remove
 venv_remove() {
-  rm -rf "$ENV_NAME"
+  echo_debug venv_remove "rm -rf \"$ENV_NAME\""
+  run rm -rf "$ENV_NAME"
 }
 
 # Abort message
 abort() {
-  echo "[INFO] Abort."
+  echo_info "Abort."
   exit
 }
 
@@ -94,45 +151,63 @@ abort() {
 
 # Environment
 if [ -z "$ENV_NAME" ]; then
-  ENV_NAME="venv"
+  ENV_NAME=".venv"
 fi
 if [ -z "$ENV_DISPLAY" ]; then
   ENV_DISPLAY="bot"
 fi
 if [ -z "$ENV_REQ" ]; then
-  ENV_REQ="graia-ariadne[graia] arclet-alconna arclet-alconna-graia"
+  ENV_REQ="avilla-onebot-v11 avilla-standard-qq graia-saya graia-scheduler"
 fi
 if [ -z "$ENV_REPOS" ]; then
   ENV_REPOS=(
-    "https://github.com/GraiaProject/Ariadne.git"
+    "https://github.com/GraiaProject/Avilla.git"
     "https://github.com/GraiaProject/Scheduler.git"
-    "https://github.com/GraiaProject/Saya.git"
-    "https://github.com/ArcletProject/Alconna.git"
-    "https://github.com/ArcletProject/Alconna-Graia.git"
   )
 fi
+#if [ -z "$ENV_SCRIPT" ]; then
+#  ENV_SCRIPT="venv_script_avilla.sh"
+#fi
 
 # Parse args
 # Note: Flags are parsed as strings,
 #       so 0 or others -> true, empty or not set -> false.
-ARG_GLOBAL="--system-site-packages"
+if [[ "$*" =~ (--debug|--dry-run) ]]; then
+  flag FLAG_DEBUG
+fi
 while [ -n "$1" ]; do
   case $1 in
   "--new" | "-n")
-    FLAG_NEW=0
+    flag FLAG_NEW
     ;;
   "--remove" | "-r")
-    FLAG_REMOVE=0
+    flag FLAG_REMOVE
     #rm -rf "$ENV_NAME/"
     ;;
   "--update" | "-u")
-    FLAG_UPDATE=0
+    flag FLAG_UPDATE
+    ;;
+  "--auto")
+    flag FLAG_AUTO
     ;;
   "--use-git")
-    FLAG_GIT=0
+    flag FLAG_GIT
     ;;
-  "--local")
-    ARG_GLOBAL=
+  "--dry-run")
+    flag FLAG_DRYRUN
+    ;;
+  "--debug")
+    ;;
+  "--script")
+    if [ -f "$2" ]; then
+      ENV_SCRIPT=$2
+      shift
+    else
+      echo_warn "Invalid script path."
+    fi
+    ;;
+  "--global" | "-g")
+    ARG_GLOBAL="--system-site-packages"
     ;;
   "--requirement")
     ENV_REQ="-r requirements.txt"
@@ -143,7 +218,7 @@ while [ -n "$1" ]; do
       ENV_NAME="$2"
       shift
     else
-      echo "[Warning] Invalid name."
+      echo_warn "Invalid name."
     fi
     ;;
   "--display")
@@ -151,7 +226,7 @@ while [ -n "$1" ]; do
       ENV_DISPLAY="$2"
       shift
     else
-      echo "[Warning] Invalid display name."
+      echo_warn "Invalid display name."
     fi
     ;;
   "--help" | "-h")
@@ -161,31 +236,38 @@ while [ -n "$1" ]; do
     show_version
     ;;
   *)
-    echo "[WARNING] Invalid argument: $1."
+    echo_warn "Invalid argument: $1."
     ;;
   esac
   shift
 done
 
+echo_debug env "ENV_NAME=$ENV_NAME"
+echo_debug env "ENV_DISPLAY=$ENV_DISPLAY"
+echo_debug env "ENV_REQ=$ENV_REQ"
+echo_debug env "ENV_REPOS=(${ENV_REPOS[*]})"
+echo_debug env "ENV_SCRIPT=$ENV_SCRIPT"
+
 ### Main
 
 # Check venv
 if ! python -m venv -h >/dev/null; then
-  echo "[ERROR] python venv not found. Did you install python?"
+  echo_error "Python venv not found. Did you install python?"
   exit 1
 fi
 
 # Check if the environment exists
 find_python
-if [ "$PY_DIR" ]; then
-  FLAG_EXIST=0
+if [ -z "$VAR_PYTHON" ] && [ "$FLAG_DRYRUN" ]; then
+  echo_debug dry_run "VAR_PYTHON is empty. You can set it manually or keep it empty."
+  question "Set VAR_PYTHON" VAR_PYTHON "$ENV_NAME/bin/python"
 fi
 
 # Operations (new > remove > update)
-if [ $FLAG_NEW ]; then
-  if [ $FLAG_EXIST ]; then
-    echo "[INFO] Environment \"$ENV_NAME\" exists. Continue?"
-    read -rp "       [y]yes, [N]No, [r]reinstall: " REPLY
+if [ "$FLAG_NEW" ]; then
+  if [ -n "$VAR_PYTHON" ]; then
+    echo_info "Environment \"$ENV_NAME\" exists. Continue?"
+    question "[y]yes, [N]No, [r]reinstall" REPLY
     case $REPLY in
     y | Y) ;;
     r | R)
@@ -198,22 +280,24 @@ if [ $FLAG_NEW ]; then
   fi
   venv_init
   venv_update
-elif [ $FLAG_REMOVE ]; then
-  echo "[WARNING] Will delete directory: \"$ENV_NAME\". Continue?"
-  read -rp "          [Y]Yes, [n]no: " REPLY
+elif [ "$FLAG_REMOVE" ]; then
+  echo_warn "Will delete directory: \"$ENV_NAME\". Continue?"
+  question "[Y]Yes, [n]no" REPLY
   case $REPLY in
   n | N)
     abort
     ;;
   esac
   venv_remove
-elif [ $FLAG_UPDATE ]; then
-  if [ ! $FLAG_EXIST ]; then
-    echo "[INFO] Environment not found. Installing..."
+elif [ "$FLAG_UPDATE" ]; then
+  if [ -z "$VAR_PYTHON" ]; then
+    echo_info "Environment not found. Installing..."
     venv_init
   fi
   venv_update
+elif [ "$FLAG_DRYRUN" ]; then
+  echo_warn "Unknown operation. In dry run mode, the script does not exit."
 else
-  echo "[ERROR] Unknown operation. Use \"$0 -h\" for help."
+  echo_error "Unknown operation. Use \"$0 -h\" for help."
   exit 1
 fi
