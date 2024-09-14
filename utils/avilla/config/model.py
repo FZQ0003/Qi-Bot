@@ -7,12 +7,6 @@ from utils.config.protocol import ProtocolConfigModel, WebConfigModel, update_pr
 from utils.model import field_validator
 from utils.model.types import QQAccount
 
-__all__ = [
-    'AvillaConsoleConfigModel',
-    'AvillaElizabethConfigModel',
-    'AvillaOnebot11ConfigModel'
-]
-
 
 class AvillaBaseConfigModel(ProtocolConfigModel):
     def configure(self, app: Avilla = ..., protocol: BaseProtocol = ...) -> None:

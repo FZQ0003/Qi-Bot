@@ -12,6 +12,9 @@ protocols:
 #    adapter: 'ws'
 #    url: 'ws://localhost:8081'
 #    access_token: 'ServiceVerifyKey'
+#  - protocol: 'lagrange' # Not implemented yet
+#    account: 1234567890
+#    sign_url: 'https://localhost/api/sign' # Get it by yourself
 file:
   cache:
     enable: True
